@@ -1,0 +1,242 @@
+{
+  "type": "FeatureCollection",
+  "generator": "overpass-turbo",
+  "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
+  "timestamp": "2026-08-24T19:27:51Z",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/90989998",
+        "landuse": "industrial",
+        "name": "Angul Smelter power station",
+        "operator": "National Aluminum Co Ltd",
+        "plant:method": "combustion",
+        "plant:output:electricity": "1200 MW",
+        "plant:source": "coal",
+        "power": "plant",
+        "ref": "https://www.gem.wiki/Angul_Smelter_power_station",
+        "start_date": "1985",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.1937858,
+          20.8531792
+        ]
+      },
+      "id": "way/90989998"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/151113257",
+        "landuse": "industrial",
+        "name": "Talcher Super Thermal Powerstation",
+        "operator": "NTPC",
+        "operator:wikidata": "Q1967805",
+        "plant:method": "combustion",
+        "plant:output:electricity": "3 GW",
+        "plant:source": "coal",
+        "power": "plant",
+        "wikidata": "Q7679080",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.0742078,
+          21.0944334
+        ]
+      },
+      "id": "way/151113257"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/177572840",
+        "landuse": "industrial",
+        "name:en": "NBVL Kharagprasad Power Plant",
+        "plant:method": "combustion",
+        "plant:output:electricity": "95 MW",
+        "plant:source": "coal",
+        "power": "plant",
+        "source": "https://www.gem.wiki/Kharagprasad_power_station",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.2911873,
+          20.8076658
+        ]
+      },
+      "id": "way/177572840"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/231258311",
+        "landuse": "industrial",
+        "name": "Talcher Thermal Power Station",
+        "operator": "NTPC",
+        "operator:wikidata": "Q1967805",
+        "plant:method": "combustion",
+        "plant:output:electricity": "460 MW",
+        "plant:source": "coal",
+        "power": "plant",
+        "wikidata": "Q7679081",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.208218,
+          20.913111
+        ]
+      },
+      "id": "way/231258311"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/354070558",
+        "alt_name": "Derang Thermal Power Station",
+        "landuse": "industrial",
+        "name": "Angul power station",
+        "operator": "Jindal Power Limited",
+        "plant:method": "combustion",
+        "plant:output:electricity": "1200 MW",
+        "plant:source": "coal",
+        "power": "plant",
+        "ref": "https://www.gem.wiki/Angul_power_station",
+        "start_date": "2014",
+        "wikidata": "Q17049314",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          84.9904421,
+          21.1310415
+        ]
+      },
+      "id": "way/354070558"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/396925738",
+        "landuse": "industrial",
+        "name": "Meramandali Power Station",
+        "operator": "Tata Steel BSL Limited (Bhushan Steel Limited)",
+        "plant:method": "combustion",
+        "plant:output:electricity": "yes",
+        "plant:source": "coal",
+        "power": "plant",
+        "source": "https://www.gem.wiki/Meramandali_power_station#Background_on_Plant",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.2536075,
+          20.8066389
+        ]
+      },
+      "id": "way/396925738"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/396925739",
+        "landuse": "industrial",
+        "name": "Kamalanga Thermal Power Plant",
+        "operator": "GMR Energy",
+        "plant:method": "combustion",
+        "plant:output:electricity": "1050 MW",
+        "plant:source": "coal",
+        "power": "plant",
+        "wikidata": "Q11979976",
+        "wikipedia": "en:Kamalanga Thermal Power Plant",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.2653241,
+          20.8652362
+        ]
+      },
+      "id": "way/396925739"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/989333273",
+        "description": "105040",
+        "landuse": "industrial",
+        "name": "Solar plant NTPC kaniha",
+        "plant:method": "photovoltaic",
+        "plant:output:electricity": "10 MW",
+        "plant:source": "solar",
+        "plant:type": "solar_photovoltaic_panel",
+        "power": "plant",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.0969944,
+          21.0874331
+        ]
+      },
+      "id": "way/989333273"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1007115341",
+        "description": "23970",
+        "landuse": "industrial",
+        "plant:method": "photovoltaic",
+        "plant:output:electricity": "yes",
+        "plant:source": "solar",
+        "plant:type": "solar_photovoltaic_panel",
+        "power": "plant",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.0668141,
+          21.0909229
+        ]
+      },
+      "id": "way/1007115341"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1012595669",
+        "landuse": "industrial",
+        "name": "Angul Steel Power Plant",
+        "plant:method": "combustion",
+        "plant:output:electricity": "yes",
+        "plant:source": "coal",
+        "power": "plant",
+        "source": "https://www.gem.wiki/Angul_Steel_power_station",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          84.9923335,
+          20.8921661
+        ]
+      },
+      "id": "way/1012595669"
+    }
+  ]
+}

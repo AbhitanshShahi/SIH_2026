@@ -23,10 +23,8 @@ __pycache__/
 *.pth
 
 # Raw datasets
-data/raw/
 
 # Processed/generated data
-data/processed/
 
 # Python tooling
 .pytest_cache/

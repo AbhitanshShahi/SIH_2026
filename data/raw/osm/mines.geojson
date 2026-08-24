@@ -1,0 +1,208 @@
+{
+  "type": "FeatureCollection",
+  "generator": "overpass-turbo",
+  "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
+  "timestamp": "2026-08-24T19:29:51Z",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/193361392",
+        "landuse": "quarry",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.0704161,
+          20.8672836
+        ]
+      },
+      "id": "way/193361392"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/193361393",
+        "landuse": "quarry",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.082926,
+          20.8794519
+        ]
+      },
+      "id": "way/193361393"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/193361394",
+        "landuse": "quarry",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.0738856,
+          20.8734363
+        ]
+      },
+      "id": "way/193361394"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/928075504",
+        "landuse": "quarry",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.1441047,
+          20.9338329
+        ]
+      },
+      "id": "way/928075504"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/928075505",
+        "landuse": "quarry",
+        "name": "Balaram Coal Mine",
+        "operator": "Mahanadi Coalfields Limited (MCL)",
+        "source": "https://www.gem.wiki/Balaram_coal_mine",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.0773076,
+          20.957612
+        ]
+      },
+      "id": "way/928075505"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/928075506",
+        "description": "Bharatpur coal mine somewhere inside",
+        "landuse": "quarry",
+        "name": "Ananta coal mine",
+        "operator": "Mahanadi Coalfields Limited (MCL)",
+        "resource": "coal",
+        "source": "https://www.gem.wiki/Ananta_coal_mine",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.1350951,
+          20.9673995
+        ]
+      },
+      "id": "way/928075506"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/942438107",
+        "landuse": "quarry",
+        "name": "Kaniha Coal Mine",
+        "operator": "Mahanadi Coalfields Limited (MCL)",
+        "resource": "coal",
+        "source": "https://www.gem.wiki/Talcher_coal_mines",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.043267,
+          21.0763211
+        ]
+      },
+      "id": "way/942438107"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/982263322",
+        "landuse": "quarry",
+        "resource": "coal",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.0118851,
+          20.953224
+        ]
+      },
+      "id": "way/982263322"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/982263323",
+        "landuse": "quarry",
+        "name": "Hingula-II Coal Mine",
+        "operator": "Mahanadi Coalfields Limited (MCL)",
+        "resource": "coal",
+        "source": "https://www.gem.wiki/Hingula_II_coal_mine",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.0292551,
+          20.9597665
+        ]
+      },
+      "id": "way/982263323"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/982272879",
+        "landuse": "quarry",
+        "name": "Lingaraj Coal Mine",
+        "operator": "Mahanadi Coalfields Limited (MCL)",
+        "resource": "coal",
+        "source": "https://www.gem.wiki/Lingaraj_coal_mine",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.1803922,
+          20.9619004
+        ]
+      },
+      "id": "way/982272879"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/988893557",
+        "landuse": "quarry",
+        "name": "Bhubhaneshwari coal mine",
+        "operator": "Mahanadi Coalfields Limited (MCL)",
+        "resource": "coal",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.1711118,
+          20.9723596
+        ]
+      },
+      "id": "way/988893557"
+    }
+  ]
+}
