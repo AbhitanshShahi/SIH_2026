@@ -1,0 +1,61 @@
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ML artifacts
+*.joblib
+*.pkl
+*.pickle
+*.h5
+*.pt
+*.pth
+
+# Raw datasets
+data/raw/
+
+# Processed/generated data
+data/processed/
+
+# Python tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+build/
+
+# Frontend environment variables
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# Backend environment variables
+backend/.env
+backend/.env.*
+!backend/.env.example
