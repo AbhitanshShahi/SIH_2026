@@ -57,3 +57,6 @@ frontend/.env.*
 backend/.env
 backend/.env.*
 !backend/.env.example
+eda/
+data/raw/
+processed/
