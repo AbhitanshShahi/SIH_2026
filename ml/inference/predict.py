@@ -1,12 +1,17 @@
 import joblib
 import pandas as pd
-from pathlib import Path
+import requests
+from io import BytesIO
 
+MODEL_URL = "https://huggingface.co/abhitanshshahi/fire-risk-xgboost/resolve/main/xgboost_final.joblib"
 
-MODEL_PATH = Path(
-    "ml/models/xgboost_final.pkl"
-)
+def load_model():
+    response = requests.get(MODEL_URL, timeout=30)
 
+    if response.status_code != 200:
+        raise Exception("Failed to download model from Hugging Face")
+
+    return joblib.load(BytesIO(response.content))
 
 FEATURE_ORDER = [
     "brightness",
@@ -22,17 +27,11 @@ FEATURE_ORDER = [
     "hour",
     "landcover_class"
 ]
-
-
 CLASS_NAMES = {
     0: "Other Thermal Anomaly",
     1: "Industrial Thermal Source",
     2: "Flare-like Thermal Source"
 }
-
-
-model = joblib.load(MODEL_PATH)
-
 
 encoders = {
     "satellite": {
@@ -50,7 +49,6 @@ encoders = {
     }
 }
 
-
 def preprocess_input(data):
 
     df = pd.DataFrame([data])
@@ -63,9 +61,7 @@ def preprocess_input(data):
 
     return df
 
-
-def predict(data):
-
+def predict(model, data):
     processed_data = preprocess_input(data)
 
     prediction = model.predict(
@@ -88,19 +84,19 @@ def predict(data):
 
 if __name__ == "__main__":
     sample_input = {
-        "brightness": 340,
-        "scan": 0.5,
-        "track": 0.4,
+        "brightness": 333.94,
+        "scan": 0.49,
+        "track": 0.49,
         "satellite": "SNPP",
-        "confidence": "high",
-        "version": 1,
-        "bright_t31": 300,
-        "frp": 20,
-        "daynight": "N",
-        "month": 8,
-        "hour": 18,
-        "landcover_class": 30
+        "confidence": "nominal",
+        "version": 2,
+        "bright_t31": 300.46,
+        "frp": 5.79,
+        "daynight": "D",
+        "month": 6,
+        "hour": 70,
+        "landcover_class": 60
     }
-    result = predict(sample_input)
-
+    model = load_model()
+    result = predict(model, sample_input)
     print(result)
