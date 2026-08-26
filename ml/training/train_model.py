@@ -2,7 +2,6 @@ import pandas as pd
 import logging
 from pathlib import Path
 import joblib
-
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import (
     accuracy_score,
@@ -12,15 +11,12 @@ from sklearn.metrics import (
     classification_report,
     confusion_matrix
 )
-
 from xgboost import XGBClassifier
-
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s: %(message)s"
 )
-
 
 DATASET = Path(
     "data/processed/talcher_training_dataset.csv"
@@ -34,91 +30,59 @@ RESULT_PATH = Path(
     "ml/results/xgboost_temporal_results.txt"
 )
 
-
 MODEL_PATH.parent.mkdir(
     parents=True,
     exist_ok=True
 )
-
 RESULT_PATH.parent.mkdir(
     parents=True,
     exist_ok=True
 )
 
-
 def load_data():
-
     logging.info("Loading dataset")
-
     df = pd.read_csv(DATASET)
-
     logging.info(
         f"Dataset shape: {df.shape}"
     )
-
     df["acq_date"] = pd.to_datetime(
         df["acq_date"]
     )
-
     return df
 
-
-
 def preprocess_data(df):
-
     logging.info("Preprocessing features")
-
-
     target = "thermal_source_class"
-
-
     drop_columns = [
-
         target,
-
         # location leakage/generalization
         "latitude",
         "longitude",
-
         # direct FIRMS classification leakage
         "type",
         "instrument",
-
         # raw date handled separately
         "acq_date",
         "acq_time",
-
         # label generation features
         "distance_to_industry",
         "distance_to_powerplant",
         "distance_to_mine",
         "distance_to_known_flare"
     ]
-
-
     X = df.drop(
         columns=drop_columns,
         errors="ignore"
     )
-
-
     y = df[target]
-
-
     categorical_columns = X.select_dtypes(
         include=["object"]
     ).columns
-
-
     logging.info(
         f"Categorical columns: {list(categorical_columns)}"
     )
-
-
     for col in categorical_columns:
-
         encoder = LabelEncoder()
-
         X[col] = encoder.fit_transform(
             X[col].astype(str)
         )
@@ -129,32 +93,20 @@ def preprocess_data(df):
     return X, y
 
 def temporal_split(df):
-
     logging.info("Creating temporal split")
-
-
     train_df = df[
         df["acq_date"] < "2025-01-01"
     ]
-
-
     test_df = df[
         df["acq_date"] >= "2025-01-01"
     ]
-
-
     logging.info(
         f"Training period: {train_df['acq_date'].min()} to {train_df['acq_date'].max()}"
     )
-
     logging.info(
         f"Testing period: {test_df['acq_date'].min()} to {test_df['acq_date'].max()}"
     )
-
-
     return train_df, test_df
-
-
 
 def train_model(X_train, y_train):
 

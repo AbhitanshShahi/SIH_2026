@@ -23,9 +23,7 @@ def create_labels(df):
 
     df["thermal_source_class"] = 0
 
-    # -------------------------
-    # Class 1: Industrial source
-    # -------------------------
+    # Class 1: Industrial aag
     industrial_condition = (
         (
             (df["distance_to_industry"] <= 500)
@@ -43,10 +41,7 @@ def create_labels(df):
         "thermal_source_class"
     ] = 1
 
-
-    # -------------------------
-    # Class 2: Gas flare
-    # -------------------------
+    # Class 2: Flare-like
     flare_condition = (
         (df["distance_to_known_flare"] <= 5000)
         &
