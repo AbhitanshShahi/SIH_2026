@@ -117,6 +117,21 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Existing dashboard surfaces use utility classes; these preserve readable contrast in dark mode. */
+.dark .bg-white,
+.dark .bg-white\/90,
+.dark .bg-white\/95 {
+  background-color: oklch(0.205 0 0) !important;
+}
+
+.dark .bg-slate-50,
+.dark .bg-slate-50\/60,
+.dark .bg-slate-50\/70,
+.dark .bg-slate-50\/80,
+.dark .bg-slate-100 {
+  background-color: oklch(0.269 0 0) !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -127,4 +142,25 @@
   html {
     @apply font-sans;
   }
+}
+
+/* Custom Leaflet Map Tooltips & Overlays */
+.leaflet-container {
+  font-family: inherit !important;
+}
+
+.custom-map-tooltip {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1) !important;
+}
+
+.custom-map-tooltip::before {
+  border-top-color: #ffffff !important;
+}
+
+.custom-thermal-marker {
+  background: transparent !important;
+  border: none !important;
 }
