@@ -28,7 +28,7 @@ export function ThemeToggle() {
       variant="outline"
       size="sm"
       onClick={toggleTheme}
-      className="size-9 rounded-xl bg-white p-0 dark:bg-slate-900"
+      className="size-11 rounded-xl bg-white p-0 dark:bg-card"
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
     >

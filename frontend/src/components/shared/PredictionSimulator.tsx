@@ -13,9 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { PredictRequest, PredictResponse, ThermalEvent } from "@/types/thermal";
+import { PredictRequest, PredictResponse, ThermalEvent, getConfidenceLevel } from "@/types/thermal";
 import { predictThermalEvent } from "@/services/predictionService";
-import { Sparkles, BrainCircuit, CheckCircle2, Loader2, Play } from "lucide-react";
+import { AlertCircle, BrainCircuit, CheckCircle2, Factory, Flame, Loader2, Play, Trees, Wheat } from "lucide-react";
 
 interface PredictionSimulatorProps {
   isOpen: boolean;
@@ -42,14 +42,18 @@ export function PredictionSimulator({
 
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<PredictResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleRunPredict = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const res = await predictThermalEvent(formData);
       setResult(res);
     } catch (err) {
       console.error("Predict error:", err);
+      setResult(null);
+      setError("Unable to reach the prediction API. Start the backend at http://localhost:8000 and try again.");
     } finally {
       setIsLoading(false);
     }
@@ -58,51 +62,51 @@ export function PredictionSimulator({
   const applyPreset = (type: "refinery" | "wildfire" | "flare" | "crop") => {
     if (type === "refinery") {
       setFormData({
-        latitude: 22.33,
-        longitude: 70.05,
-        frp: 135.0,
-        brightness_temperature: 345.0,
+        latitude: 21.0944,
+        longitude: 85.0742,
+        frp: 168.4,
+        brightness_temperature: 352.6,
         persistence_score: 0.95,
-        night_ratio: 0.92,
-        cluster_size: 5,
-        distance_to_industry: 150,
-        land_cover: "Refinery / Petrochemical",
+        night_ratio: 0.94,
+        cluster_size: 6,
+        distance_to_industry: 120,
+        land_cover: "Thermal Power Station",
       });
     } else if (type === "wildfire") {
       setFormData({
         latitude: 21.95,
         longitude: 86.40,
-        frp: 220.0,
-        brightness_temperature: 358.0,
+        frp: 195.0,
+        brightness_temperature: 354.0,
         persistence_score: 0.1,
-        night_ratio: 0.2,
-        cluster_size: 28,
-        distance_to_industry: 15000,
-        land_cover: "Protected Dense Forest",
+        night_ratio: 0.25,
+        cluster_size: 22,
+        distance_to_industry: 15400,
+        land_cover: "Protected Forest Reserve",
       });
     } else if (type === "flare") {
       setFormData({
-        latitude: 19.12,
-        longitude: 72.88,
-        frp: 85.0,
-        brightness_temperature: 334.0,
+        latitude: 20.9250,
+        longitude: 85.1650,
+        frp: 82.5,
+        brightness_temperature: 334.8,
         persistence_score: 0.98,
-        night_ratio: 0.99,
+        night_ratio: 0.98,
         cluster_size: 1,
-        distance_to_industry: 50,
-        land_cover: "Offshore Gas Platform",
+        distance_to_industry: 80,
+        land_cover: "Gasification Plant",
       });
     } else if (type === "crop") {
       setFormData({
-        latitude: 30.70,
-        longitude: 75.85,
-        frp: 65.0,
-        brightness_temperature: 325.0,
+        latitude: 20.68,
+        longitude: 85.60,
+        frp: 58.0,
+        brightness_temperature: 324.5,
         persistence_score: 0.05,
         night_ratio: 0.1,
-        cluster_size: 12,
-        distance_to_industry: 7500,
-        land_cover: "Agricultural Wheat Field",
+        cluster_size: 11,
+        distance_to_industry: 5400,
+        land_cover: "Agricultural Cropland",
       });
     }
     setResult(null);
@@ -110,60 +114,61 @@ export function PredictionSimulator({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-full sm:max-w-2xl bg-white p-5 rounded-2xl z-[700] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="z-[700] max-h-[90vh] w-full overflow-y-auto rounded-3xl bg-white p-6 sm:max-w-2xl">
         <DialogHeader>
-          <div className="flex items-center gap-2">
-            <div className="size-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
-              <BrainCircuit className="size-5" />
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-xl border border-border bg-muted text-primary">
+              <BrainCircuit className="size-5" aria-hidden="true" />
             </div>
             <div>
-              <DialogTitle className="text-base font-bold">
-                AI Thermal Classification Simulator
+              <DialogTitle className="text-base font-normal">
+                Classification simulator
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                Test the backend classification pipeline (<code className="font-mono">POST /predict</code>) with custom geospatial & thermal parameters.
+                Run the backend pipeline with custom geospatial and thermal parameters.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        {/* Preset Scenarios */}
-        <div className="space-y-1.5 pt-2">
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Quick Preset Scenarios:
-          </span>
-          <div className="flex flex-wrap gap-1.5">
+        <div className="space-y-3 pt-3">
+          <span className="text-[11px] text-muted-foreground">Odisha presets</span>
+          <div className="flex flex-wrap gap-3">
             <Button
               variant="outline"
               size="sm"
-              className="text-xs h-7 rounded-lg"
+              className="h-11 rounded-xl text-xs font-normal"
               onClick={() => applyPreset("refinery")}
             >
-              🏭 Jamnagar Refinery
+              <Factory className="size-3.5" aria-hidden="true" />
+              NTPC Talcher
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="text-xs h-7 rounded-lg"
+              className="h-11 rounded-xl text-xs font-normal"
               onClick={() => applyPreset("wildfire")}
             >
-              🌲 Similipal Forest Fire
+              <Trees className="size-3.5" aria-hidden="true" />
+              Similipal wildfire
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="text-xs h-7 rounded-lg"
+              className="h-11 rounded-xl text-xs font-normal"
               onClick={() => applyPreset("flare")}
             >
-              🔥 Mumbai High Gas Flare
+              <Flame className="size-3.5" aria-hidden="true" />
+              Talcher flare
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="text-xs h-7 rounded-lg"
+              className="h-11 rounded-xl text-xs font-normal"
               onClick={() => applyPreset("crop")}
             >
-              🌾 Punjab Crop Residue
+              <Wheat className="size-3.5" aria-hidden="true" />
+              Dhenkanal crop residue
             </Button>
           </div>
         </div>
@@ -260,8 +265,14 @@ export function PredictionSimulator({
         </div>
 
         {/* Inference Results View */}
+        {error && (
+          <div role="alert" className="mt-3 flex items-start gap-2 rounded-3xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            <AlertCircle className="mt-0.5 size-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
         {result && (
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/90 space-y-3 mt-2">
+          <div className="mt-3 space-y-3 rounded-3xl border border-border bg-muted p-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Badge
@@ -281,12 +292,12 @@ export function PredictionSimulator({
                   Prediction Output
                 </span>
               </div>
-              <span className="text-xs font-mono font-bold text-foreground">
-                {Math.round(result.confidence * 100)}% Confidence
+              <span className="rounded-xl bg-white px-2.5 py-0.5 font-mono text-xs text-foreground">
+                {getConfidenceLevel(result.confidence)} Confidence
               </span>
             </div>
 
-            <Progress value={result.confidence * 100} className="h-2 bg-slate-200" />
+            <Progress value={result.confidence * 100} className="h-2 bg-white" />
 
             <div className="space-y-1.5 pt-1">
               <span className="text-[11px] font-semibold text-foreground block">

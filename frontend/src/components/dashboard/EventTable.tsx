@@ -1,5 +1,5 @@
 import React from "react";
-import { ThermalEvent } from "@/types/thermal";
+import { ThermalEvent, getConfidenceLevel } from "@/types/thermal";
 import {
   Table,
   TableBody,
@@ -21,26 +21,26 @@ interface EventTableProps {
 export function EventTable({ events, selectedEvent, onSelectEvent }: EventTableProps) {
   if (events.length === 0) {
     return (
-      <div className="p-8 text-center bg-white rounded-xl border border-border">
+      <div className="rounded-3xl border border-border bg-white p-8 text-center mira-shadow">
         <p className="text-sm text-muted-foreground">No thermal events match the current filter criteria.</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full bg-white rounded-2xl border border-border shadow-xs overflow-hidden">
+    <div className="w-full overflow-hidden rounded-3xl border border-border bg-white mira-shadow">
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader className="bg-slate-50/80">
+          <TableHeader className="bg-muted">
             <TableRow>
-              <TableHead className="w-[120px] text-xs font-semibold">Event ID</TableHead>
-              <TableHead className="text-xs font-semibold">Classification</TableHead>
-              <TableHead className="text-xs font-semibold">Risk Level</TableHead>
-              <TableHead className="text-xs font-semibold text-right">Confidence</TableHead>
-              <TableHead className="text-xs font-semibold text-right">FRP (MW)</TableHead>
-              <TableHead className="text-xs font-semibold text-right">Persistence</TableHead>
-              <TableHead className="text-xs font-semibold">Location / Facility</TableHead>
-              <TableHead className="text-xs font-semibold text-right">Action</TableHead>
+              <TableHead className="w-[120px] text-xs font-normal">Event ID</TableHead>
+              <TableHead className="text-xs font-normal">Classification</TableHead>
+              <TableHead className="text-xs font-normal">Risk</TableHead>
+              <TableHead className="text-right text-xs font-normal">Confidence</TableHead>
+              <TableHead className="text-right text-xs font-normal">FRP (MW)</TableHead>
+              <TableHead className="text-right text-xs font-normal">Persistence</TableHead>
+              <TableHead className="text-xs font-normal">Location</TableHead>
+              <TableHead className="text-right text-xs font-normal">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -49,25 +49,21 @@ export function EventTable({ events, selectedEvent, onSelectEvent }: EventTableP
               return (
                 <TableRow
                   key={event.id}
-                  className={`cursor-pointer transition-colors ${
-                    isSelected ? "bg-primary/5 font-medium" : "hover:bg-slate-50/60"
-                  }`}
+                  className={`cursor-pointer ${isSelected ? "bg-muted" : "hover:bg-muted/70"}`}
                   onClick={() => onSelectEvent(event)}
                 >
-                  <TableCell className="font-mono text-xs font-semibold text-foreground">
-                    {event.id}
-                  </TableCell>
+                  <TableCell className="font-mono text-xs text-foreground">{event.id}</TableCell>
                   <TableCell>
                     <Badge
                       variant="outline"
-                      className={`text-[11px] font-semibold ${
+                      className={`text-[11px] font-normal ${
                         event.classification === "Industrial Source"
-                          ? "bg-red-50 text-red-700 border-red-200"
+                          ? "border-red-200 bg-red-50 text-red-700"
                           : event.classification === "Natural Fire"
-                          ? "bg-blue-50 text-blue-700 border-blue-200"
+                          ? "border-blue-200 bg-blue-50 text-blue-700"
                           : event.classification === "Gas Flare"
-                          ? "bg-amber-50 text-amber-700 border-amber-200"
-                          : "bg-slate-50 text-slate-700 border-slate-200"
+                          ? "border-amber-200 bg-amber-50 text-amber-700"
+                          : "border-border bg-muted text-foreground"
                       }`}
                     >
                       {event.classification}
@@ -75,29 +71,29 @@ export function EventTable({ events, selectedEvent, onSelectEvent }: EventTableP
                   </TableCell>
                   <TableCell>
                     <span
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                      className={`rounded-xl px-2 py-0.5 text-[11px] ${
                         event.risk_level === "High"
-                          ? "bg-red-100 text-red-700"
+                          ? "bg-red-50 text-red-700"
                           : event.risk_level === "Medium"
-                          ? "bg-amber-100 text-amber-700"
-                          : "bg-slate-100 text-slate-700"
+                          ? "bg-amber-50 text-amber-700"
+                          : "bg-muted text-muted-foreground"
                       }`}
                     >
                       {event.risk_level}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right font-mono text-xs font-bold text-foreground">
-                    {event.confidence}%
+                  <TableCell className="text-right font-mono text-xs">
+                    {getConfidenceLevel(event.confidence)}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-xs font-bold text-foreground">
+                  <TableCell className="text-right font-mono text-xs text-foreground">
                     {event.frp}
                   </TableCell>
                   <TableCell className="text-right font-mono text-xs text-muted-foreground">
                     {event.persistence_days}d
                   </TableCell>
-                  <TableCell className="text-xs text-foreground max-w-[200px] truncate">
+                  <TableCell className="max-w-[200px] truncate text-xs text-foreground">
                     <div className="flex items-center gap-1">
-                      <MapPin className="size-3 text-muted-foreground shrink-0" />
+                      <MapPin className="size-3 shrink-0 text-muted-foreground" aria-hidden="true" />
                       <span className="truncate">{event.nearby_facility || event.land_cover}</span>
                     </div>
                   </TableCell>
@@ -105,14 +101,15 @@ export function EventTable({ events, selectedEvent, onSelectEvent }: EventTableP
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="size-7 p-0 rounded-lg"
+                      className="size-11 rounded-xl p-0"
                       onClick={(e) => {
                         e.stopPropagation();
                         onSelectEvent(event);
                       }}
                       title="Inspect Event"
+                      aria-label="Inspect event"
                     >
-                      <Eye className="size-3.5 text-slate-600" />
+                      <Eye className="size-3.5" />
                     </Button>
                   </TableCell>
                 </TableRow>

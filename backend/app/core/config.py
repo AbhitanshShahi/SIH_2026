@@ -3,8 +3,11 @@ import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load .env file
-load_dotenv()
+# Load the backend environment file regardless of the process working directory.
+# This lets the documented command (`uvicorn ... --app-dir backend`) work when
+# it is run from the repository root.
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+load_dotenv(BACKEND_DIR / ".env")
 
 # ---------------------------------------------------------------------------
 # Project root on sys.path — allows `from ml.inference.predict import ...`

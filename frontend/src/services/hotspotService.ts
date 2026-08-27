@@ -1,6 +1,66 @@
-import { HotspotFeatureCollection, ThermalEvent, DashboardStats } from "@/types/thermal";
-import { MOCK_HOTSPOT_COLLECTION, MOCK_THERMAL_EVENTS } from "@/data/mockHotspots";
+import { ClassificationType, HotspotFeatureCollection, RiskLevel, SatelliteSource, ThermalEvent, DashboardStats } from "@/types/thermal";
 import { request } from "./apiClient";
+
+const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
+
+interface BackendGeoJSONFeature {
+  type: "Feature";
+  geometry: { type: "Point"; coordinates: [number, number] };
+  properties: {
+    id: number;
+    timestamp: string;
+    frp: number | null;
+    brightness: number | null;
+    satellite: string | null;
+    prediction_class: number | null;
+    class_name: string | null;
+    confidence: number | null;
+    risk_level: string | null;
+    reasoning: string[];
+  };
+}
+
+interface BackendGeoJSONCollection {
+  type: "FeatureCollection";
+  features: BackendGeoJSONFeature[];
+}
+
+const classificationById: Record<number, ClassificationType> = {
+  0: "Unknown",
+  1: "Industrial Source",
+  2: "Gas Flare",
+};
+
+const satelliteByBackendValue: Record<string, SatelliteSource> = {
+  SNPP: "Suomi NPP / VIIRS",
+  N20: "NOAA-20 / VIIRS",
+  TERRA: "Terra / MODIS",
+  AQUA: "Aqua / MODIS",
+};
+
+function mapBackendFeature(feature: BackendGeoJSONFeature): ThermalEvent {
+  const { properties, geometry } = feature;
+  const classification = classificationById[properties.prediction_class ?? 0] ?? "Unknown";
+  const isIndustrial = classification === "Industrial Source" || classification === "Gas Flare";
+
+  return {
+    id: String(properties.id),
+    location: { latitude: geometry.coordinates[1], longitude: geometry.coordinates[0] },
+    classification,
+    confidence: Math.round((properties.confidence ?? 0) * 100),
+    risk_level: (properties.risk_level as RiskLevel) ?? "Low",
+    frp: properties.frp ?? 0,
+    brightness_temperature: properties.brightness ?? 0,
+    persistence_days: 0,
+    night_ratio: 0,
+    cluster_size: 1,
+    distance_to_industry: isIndustrial ? 0 : 10_000,
+    land_cover: isIndustrial ? "Industrial monitoring area" : "Unclassified land cover",
+    reasoning: properties.reasoning ?? [],
+    timestamp: properties.timestamp,
+    satellite: properties.satellite ? satelliteByBackendValue[properties.satellite.toUpperCase()] : undefined,
+  };
+}
 
 export async function fetchHotspots(params?: {
   region?: string;
@@ -8,23 +68,26 @@ export async function fetchHotspots(params?: {
   minFRP?: number;
 }): Promise<HotspotFeatureCollection> {
   const queryParams = new URLSearchParams();
-  if (params?.region && params.region !== "all") queryParams.append("region", params.region);
-  if (params?.date) queryParams.append("date", params.date);
+  if (params?.date) queryParams.append("start_date", `${params.date}T00:00:00Z`);
   if (params?.minFRP) queryParams.append("min_frp", params.minFRP.toString());
 
   const queryString = queryParams.toString();
-  const endpoint = `/hotspots${queryString ? `?${queryString}` : ""}`;
+  const endpoint = `/events/geojson${queryString ? `?${queryString}` : ""}`;
 
-  try {
-    const data = await request<HotspotFeatureCollection>(endpoint);
-    if (data && data.features && data.features.length > 0) {
-      return data;
-    }
-    return MOCK_HOTSPOT_COLLECTION;
-  } catch (error) {
-    console.warn("Backend /hotspots unavailable, using contract mock dataset.", error);
+  if (useMockData) {
+    const { MOCK_HOTSPOT_COLLECTION } = await import("@/data/mockHotspots");
     return MOCK_HOTSPOT_COLLECTION;
   }
+
+  const data = await request<BackendGeoJSONCollection>(endpoint);
+  return {
+    type: "FeatureCollection",
+    features: data.features.map((feature) => ({
+      type: "Feature",
+      geometry: feature.geometry,
+      properties: mapBackendFeature(feature),
+    })),
+  };
 }
 
 export function computeDashboardStats(events: ThermalEvent[]): DashboardStats {
