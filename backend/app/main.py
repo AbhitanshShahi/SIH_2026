@@ -11,6 +11,9 @@ from app.core.config import CORS_ORIGINS  # noqa: F401  (side-effect: sets sys.p
 
 from app.api.router import api_router
 from app.api.routes.health import router as health_router
+from app.core.base import Base
+from app.core.database import engine
+from app.models.thermal_event import ThermalEvent
 from ml.inference.predict import load_model
 from app.services.classification import classification_service
 
@@ -29,6 +32,17 @@ async def lifespan(app: FastAPI):
     classification service.  The model stays in memory for all
     subsequent requests.
     """
+    logger.info("Starting up — initializing database schema...")
+    try:
+        # ThermalEvent is imported above so its table is registered on Base.
+        # create_all is idempotent and allows a fresh configured PostGIS
+        # database to serve the dashboard without a separate migration step.
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database schema is ready.")
+    except Exception:
+        logger.exception("Database schema initialization failed.")
+        raise
+
     logger.info("Starting up — loading XGBoost model from Hugging Face...")
     try:
         model = load_model()

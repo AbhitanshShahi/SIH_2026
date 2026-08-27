@@ -2,6 +2,31 @@
 
 > Auto-extracted from `https://mira-inc.jp/` on 2026-08-26
 
+## AgniDrishti application notes
+
+This product is a dense GIS operations dashboard, not a marketing site. Apply Mira as **chrome**: light canvas, grayscale type, 12px spacing, tinted shadows, and rounded — never sharp — surfaces.
+
+| Mira token | Dashboard usage |
+|---|---|
+| `#ffffff` canvas | Page, cards, panels, header |
+| `#6e6e6e` / `#666666` | Headings, body, captions — never `#000` |
+| `#888888` / `#aaaaaa` | Primary actions, active tabs, focus ring |
+| `#e5e5e5` | Borders and inputs |
+| `12px` base | Gaps, padding (`gap-3`, `p-3`) |
+| `0 0 6px rgba(31,184,181,0.07)` | Card / panel elevation |
+| Heading weight 400 | Titles and section labels |
+| Yu Gothic Medium | Loaded with Noto Sans JP + Hiragino fallbacks |
+
+**Operational color exception:** classification, risk, and confidence remain tinted (red / amber / blue / emerald). Those colors encode telemetry, not brand decoration.
+
+**Radius on dense UI:** Mira marketing cards use ~87px. Dashboard surfaces use **24px** (`rounded-3xl`); buttons and controls use **12px**. 87px would collapse KPI rows and event cards.
+
+**Type size:** Body stays at **14px+**. Extracted 9.9px sizes are not used.
+
+**Dark mode** remains a user toggle. Light is the brand default.
+
+---
+
 ## 1. Visual Theme & Atmosphere
 
 Friendly, approachable design with rounded shapes and generous whitespace.

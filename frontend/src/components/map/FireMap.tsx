@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { ThermalEvent, ClassificationType } from "@/types/thermal";
+import { ThermalEvent, ClassificationType, getConfidenceLevel } from "@/types/thermal";
 import { MapControls } from "./MapControls";
 import { MapLegend } from "./MapLegend";
 import "leaflet/dist/leaflet.css";
@@ -19,6 +19,9 @@ const OSM_ENGLISH_TILES = {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> &middot; Tiles by <a href="https://maps.wikimedia.org/">Wikimedia Maps</a>',
   maxZoom: 18,
 };
+
+const TALCHER_CENTER: [number, number] = [20.9517, 85.2158];
+const TALCHER_ZOOM = 12;
 
 function getMarkerColors(classification: ClassificationType): {
   coreColor: string;
@@ -88,10 +91,10 @@ export function FireMap({
 
       if (!isMounted || !mapContainerRef.current) return;
 
-      // Center of India overview
+      // Focus the operational workspace on Talcher, Odisha.
       const map = L.map(mapContainerRef.current, {
-        center: [22.5, 78.5],
-        zoom: 5,
+        center: TALCHER_CENTER,
+        zoom: TALCHER_ZOOM,
         zoomControl: false,
         attributionControl: false,
       });
@@ -140,10 +143,11 @@ export function FireMap({
         const { latitude, longitude } = event.location;
         const colors = getMarkerColors(event.classification);
         const isSelected = selectedEvent?.id === event.id || focusedEventId === event.id;
+        const confLevel = getConfidenceLevel(event.confidence);
 
         // Thermal Heat Halo
         if (showHeatmap) {
-          const radiusMeters = Math.min(Math.max(event.frp * 200, 8000), 45000);
+          const radiusMeters = Math.min(Math.max(event.frp * 150, 4000), 25000);
           L.circle([latitude, longitude], {
             radius: radiusMeters,
             color: colors.coreColor,
@@ -165,16 +169,16 @@ export function FireMap({
           }).addTo(overlayGroup);
         }
 
-        // Custom HTML Marker Icon
+        // Custom HTML Marker Icon with Low/Medium/High Confidence
         const markerHtml = `
-          <div class="relative flex items-center justify-center cursor-pointer group" style="width: 44px; height: 44px;">
+          <div class="relative flex items-center justify-center cursor-pointer group" style="width: 48px; height: 48px;">
             <div class="absolute inset-0 rounded-full animate-ping opacity-30" style="background-color: ${colors.coreColor}; animation-duration: ${isSelected ? "1.5s" : "3s"};"></div>
-            <div class="relative flex items-center justify-center rounded-full shadow-lg transition-transform transform group-hover:scale-110 ${isSelected ? "scale-125 ring-4 ring-white shadow-xl" : "ring-2 ring-white"}" style="width: 26px; height: 26px; background-color: ${colors.coreColor};">
-              <span class="text-[10px] font-bold text-white tracking-tighter">${Math.round(event.confidence)}%</span>
+            <div class="relative flex items-center justify-center rounded-full shadow-lg transition-transform transform group-hover:scale-110 ${isSelected ? "scale-125 ring-4 ring-white shadow-xl" : "ring-2 ring-white"}" style="width: 32px; height: 32px; background-color: ${colors.coreColor};">
+              <span class="text-[9px] font-extrabold text-white uppercase tracking-tighter">${confLevel === "High" ? "HIGH" : confLevel === "Medium" ? "MED" : "LOW"}</span>
             </div>
             ${
               isSelected
-                ? `<div class="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-foreground text-background text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-md z-50">
+                ? `<div class="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-foreground text-background text-[10px] font-semibold px-2.5 py-0.5 rounded-full shadow-md z-50">
                     ${event.classification} (${event.frp} MW)
                    </div>`
                 : ""
@@ -185,8 +189,8 @@ export function FireMap({
         const customIcon = L.divIcon({
           html: markerHtml,
           className: "custom-thermal-marker",
-          iconSize: [44, 44],
-          iconAnchor: [22, 22],
+          iconSize: [48, 48],
+          iconAnchor: [24, 24],
         });
 
         const marker = L.marker([latitude, longitude], { icon: customIcon });
@@ -197,13 +201,13 @@ export function FireMap({
 
         // Hover popup tooltip
         const popupContent = `
-          <div style="font-family: inherit; min-width: 180px; padding: 4px;">
+          <div style="font-family: inherit; min-width: 190px; padding: 4px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
               <span style="font-weight: 700; color: ${colors.textColor}; font-size: 12px;">${event.classification}</span>
               <span style="font-size: 10px; background: ${colors.badgeBg}; color: ${colors.textColor}; padding: 1px 6px; border-radius: 9999px; font-weight: 600;">${event.risk_level} Risk</span>
             </div>
             <div style="font-size: 11px; color: #4b5563; margin-bottom: 2px;">
-              <strong>FRP:</strong> ${event.frp} MW | <strong>Conf:</strong> ${event.confidence}%
+              <strong>FRP:</strong> ${event.frp} MW | <strong>Confidence:</strong> ${confLevel}
             </div>
             <div style="font-size: 10px; color: #6b7280;">
               ${event.nearby_facility || `${event.land_cover}`}
@@ -213,7 +217,7 @@ export function FireMap({
 
         marker.bindTooltip(popupContent, {
           direction: "top",
-          offset: [0, -18],
+          offset: [0, -20],
           opacity: 0.98,
           className: "custom-map-tooltip",
         });
@@ -227,7 +231,7 @@ export function FireMap({
   useEffect(() => {
     if (!mapInstanceRef.current || !selectedEvent) return;
     const { latitude, longitude } = selectedEvent.location;
-    mapInstanceRef.current.flyTo([latitude, longitude], 12, {
+    mapInstanceRef.current.flyTo([latitude, longitude], 13, {
       duration: 1.2,
       easeLinearity: 0.25,
     });
@@ -243,13 +247,18 @@ export function FireMap({
 
   const handleResetView = () => {
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([22.5, 78.5], 5, { duration: 1.0 });
+      mapInstanceRef.current.flyTo(TALCHER_CENTER, TALCHER_ZOOM, { duration: 1.0 });
     }
   };
 
   return (
-    <div className="relative w-full h-full min-h-[480px] bg-slate-100 rounded-2xl overflow-hidden border border-border shadow-sm">
-      <div ref={mapContainerRef} className="w-full h-full z-[10]" />
+    <div className="relative h-full min-h-[480px] w-full overflow-hidden rounded-3xl border border-border bg-muted mira-shadow">
+      <div ref={mapContainerRef} className="z-[10] h-full w-full" />
+
+      <div className="pointer-events-none absolute left-3 top-3 z-[20] rounded-xl border border-border bg-white/95 px-3 py-2 mira-shadow">
+        <p className="text-[11px] tracking-wide text-muted-foreground">Region</p>
+        <p className="text-xs text-foreground">Talcher, Odisha</p>
+      </div>
 
       <MapControls
         onZoomIn={handleZoomIn}

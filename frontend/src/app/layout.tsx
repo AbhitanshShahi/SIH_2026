@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const notoSansJp = Noto_Sans_JP({
+  variable: "--font-noto-sans-jp",
   subsets: ["latin"],
+  weight: ["400", "500", "700"],
 });
 
 const geistMono = Geist_Mono({
@@ -27,9 +28,15 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${notoSansJp.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-slate-50/50 text-foreground dark:bg-slate-950">
+      <body
+        className="min-h-full flex flex-col bg-background text-foreground"
+        style={{
+          fontFamily:
+            '"Yu Gothic Medium", "Yu Gothic", var(--font-noto-sans-jp), "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
+        }}
+      >
         {children}
       </body>
     </html>

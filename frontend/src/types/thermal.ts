@@ -7,6 +7,24 @@ export type ClassificationType =
   | "Unknown";
 
 export type RiskLevel = "High" | "Medium" | "Low";
+
+export type ConfidenceLevel = "High" | "Medium" | "Low";
+
+export function getConfidenceLevel(confidence: number | string): ConfidenceLevel {
+  if (typeof confidence === "string") {
+    const lower = confidence.toLowerCase();
+    if (lower.includes("high")) return "High";
+    if (lower.includes("med")) return "Medium";
+    if (lower.includes("low")) return "Low";
+    const parsed = parseFloat(confidence);
+    if (!isNaN(parsed)) return getConfidenceLevel(parsed);
+    return "Medium";
+  }
+  const val = confidence <= 1 ? confidence * 100 : confidence;
+  if (val >= 85) return "High";
+  if (val >= 65) return "Medium";
+  return "Low";
+}
 export type SatelliteSource = "Suomi NPP / VIIRS" | "NOAA-20 / VIIRS" | "Terra / MODIS" | "Aqua / MODIS";
 export type FrpLevel = "All" | "Low" | "Moderate" | "High" | "Extreme";
 

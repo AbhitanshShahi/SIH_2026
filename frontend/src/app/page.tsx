@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { ThermalEvent, FilterOptions } from "@/types/thermal";
 import { fetchHotspots, computeDashboardStats } from "@/services/hotspotService";
+import { syncLiveTelemetry } from "@/services/liveService";
 import { Header } from "@/components/shared/Header";
 import { FilterBar } from "@/components/shared/FilterBar";
 import { Statistics } from "@/components/dashboard/Statistics";
@@ -22,11 +23,9 @@ const FireMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full min-h-[500px] bg-slate-100 rounded-2xl flex flex-col items-center justify-center border border-border">
-        <div className="size-8 rounded-full border-2 border-primary border-t-transparent animate-spin mb-3" />
-        <span className="text-xs font-semibold text-muted-foreground">
-          Initializing GIS Geospatial Engine...
-        </span>
+      <div className="flex h-full min-h-[500px] w-full flex-col items-center justify-center rounded-3xl border border-border bg-muted">
+        <div className="mb-3 size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <span className="text-xs text-muted-foreground">Loading map…</span>
       </div>
     ),
   }
@@ -39,12 +38,13 @@ export default function DashboardPage() {
   const [isSimulatorOpen, setIsSimulatorOpen] = useState<boolean>(false);
   const [simulatorInitialEvent, setSimulatorInitialEvent] = useState<ThermalEvent | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("map");
 
   const [filters, setFilters] = useState<FilterOptions>({
     classification: "All",
     riskLevel: "All",
-    region: "all",
+    region: "angul",
     minFRP: 0,
     frpLevel: "All",
     minConfidence: 0,
@@ -55,6 +55,7 @@ export default function DashboardPage() {
   // Load initial hotspots
   const loadData = async () => {
     setIsLoading(true);
+    setConnectionError(null);
     try {
       const collection = await fetchHotspots({
         region: filters.region,
@@ -67,6 +68,8 @@ export default function DashboardPage() {
       }
     } catch (err) {
       console.error("Failed to load hotspots:", err);
+      setAllEvents([]);
+      setConnectionError("Unable to load backend telemetry. Confirm the API is running at the configured NEXT_PUBLIC_API_URL.");
     } finally {
       setIsLoading(false);
     }
@@ -157,8 +160,21 @@ export default function DashboardPage() {
     });
   };
 
+  const handleSyncTelemetry = async () => {
+    setIsLoading(true);
+    setConnectionError(null);
+    try {
+      await syncLiveTelemetry();
+      await loadData();
+    } catch (err) {
+      console.error("Failed to synchronize live telemetry:", err);
+      setConnectionError("Telemetry sync failed. Check the backend, FIRMS configuration, and ML model status.");
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50/60 font-sans dark:bg-slate-950">
+    <div className="flex min-h-screen flex-col bg-background font-sans">
       {/* Platform Header */}
       <Header
         onOpenSimulator={() => handleOpenSimulator()}
@@ -166,7 +182,7 @@ export default function DashboardPage() {
       />
 
       {/* Main Workspace Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-5 lg:p-6 space-y-4">
+      <main className="mx-auto w-full max-w-7xl flex-1 space-y-3 p-3 sm:p-6">
         {/* Top KPI Ribbon */}
         <Statistics stats={stats} />
 
@@ -178,43 +194,46 @@ export default function DashboardPage() {
           totalFiltered={filteredEvents.length}
         />
 
+        {connectionError && (
+          <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-800">
+            {connectionError}
+          </div>
+        )}
+
         {/* View Switcher Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/80 pb-2">
-            <TabsList className="bg-white p-1 rounded-xl border border-border shadow-xs">
-              <TabsTrigger value="map" className="text-xs font-semibold gap-1.5 rounded-lg px-3">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-3">
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+            <TabsList className="h-11 rounded-xl border border-border bg-white p-1 mira-shadow">
+              <TabsTrigger value="map" className="h-9 gap-1.5 rounded-lg px-3 text-xs font-normal">
                 <MapIcon className="size-3.5" />
-                GIS Spatial Workspace
+                Map
               </TabsTrigger>
-              <TabsTrigger value="table" className="text-xs font-semibold gap-1.5 rounded-lg px-3">
+              <TabsTrigger value="table" className="h-9 gap-1.5 rounded-lg px-3 text-xs font-normal">
                 <TableIcon className="size-3.5" />
-                Event Registry ({filteredEvents.length})
+                Registry ({filteredEvents.length})
               </TabsTrigger>
-              <TabsTrigger value="analytics" className="text-xs font-semibold gap-1.5 rounded-lg px-3">
+              <TabsTrigger value="analytics" className="h-9 gap-1.5 rounded-lg px-3 text-xs font-normal">
                 <BarChart3 className="size-3.5" />
-                Analytics & Telemetry
+                Analytics
               </TabsTrigger>
             </TabsList>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadData}
-                disabled={isLoading}
-                className="h-8 text-xs gap-1.5 rounded-xl bg-white"
-              >
-                <RefreshCw className={`size-3 text-slate-600 ${isLoading ? "animate-spin" : ""}`} />
-                Sync Telemetry
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSyncTelemetry}
+              disabled={isLoading}
+              className="h-11 rounded-xl bg-white px-3 text-xs font-normal"
+            >
+              <RefreshCw className={`size-3.5 ${isLoading ? "animate-spin" : ""}`} />
+              Sync
+            </Button>
           </div>
 
           {/* TAB 1: GIS Spatial Map + Live Feed (Primary Workspace) */}
           <TabsContent value="map" className="m-0 space-y-0">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[650px] min-h-[550px]">
-              {/* Left/Center: Interactive GIS FireMap (8 cols) */}
-              <div className="lg:col-span-8 h-full">
+            <div className="grid h-[650px] min-h-[550px] grid-cols-1 gap-3 lg:grid-cols-12">
+              <div className="h-full lg:col-span-8">
                 <FireMap
                   events={filteredEvents}
                   selectedEvent={selectedEvent}
@@ -223,25 +242,22 @@ export default function DashboardPage() {
                 />
               </div>
 
-              {/* Right: Scannable Thermal Event Feed (4 cols) */}
-              <div className="lg:col-span-4 h-full flex flex-col bg-white rounded-2xl border border-border shadow-xs overflow-hidden">
-                <div className="p-3.5 border-b border-border/80 bg-slate-50/70 flex items-center justify-between">
+              <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-white mira-shadow lg:col-span-4">
+                <div className="flex items-center justify-between border-b border-border px-3 py-3">
                   <div className="flex items-center gap-2">
-                    <Radio className="size-3.5 text-red-600 animate-pulse" />
-                    <h3 className="text-xs font-bold text-foreground">
-                      Active Detections Feed
-                    </h3>
+                    <Radio className="size-3.5 text-primary" aria-hidden="true" />
+                    <h3 className="text-sm text-foreground">Detections</h3>
                   </div>
-                  <span className="text-[11px] font-mono font-semibold text-muted-foreground">
-                    {filteredEvents.length} Events
+                  <span className="font-mono text-xs text-muted-foreground">
+                    {filteredEvents.length}
                   </span>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+                <div className="flex-1 space-y-3 overflow-y-auto p-3">
                   {filteredEvents.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
-                      <Flame className="size-8 text-slate-300 mb-2" />
-                      <p className="text-xs">No thermal anomalies match current filters.</p>
+                    <div className="flex h-full flex-col items-center justify-center p-6 text-center text-muted-foreground">
+                      <Flame className="mb-2 size-8 text-border" aria-hidden="true" />
+                      <p className="text-sm">No thermal anomalies match current filters.</p>
                     </div>
                   ) : (
                     filteredEvents.map((event) => (
@@ -268,68 +284,8 @@ export default function DashboardPage() {
           </TabsContent>
 
           {/* TAB 3: Aggregate Predictive Analytics */}
-          <TabsContent value="analytics" className="m-0 space-y-4">
+          <TabsContent value="analytics" className="m-0 space-y-3">
             <AnalyticsDashboard events={filteredEvents} onSelectEvent={handleSelectEvent} />
-            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="rounded-2xl border border-border shadow-xs bg-white">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-bold">
-                    Thermal Events by Classification
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Distribution of active anomalies identified by the ML pipeline.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="h-64 pt-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={classificationChartData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                      <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: "#64748B", fontSize: 11 }} />
-                      <YAxis tickLine={false} axisLine={false} tick={{ fill: "#64748B", fontSize: 11 }} />
-                      <Tooltip />
-                      <Bar dataKey="count" fill="#DC2626" radius={[6, 6, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-2xl border border-border shadow-xs bg-white">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-bold">
-                    Operational Intelligence Telemetry
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Aggregated physical characteristics across Indian industrial corridors.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3 pt-2">
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">High Persistence Events (&gt;20 days):</span>
-                    <span className="font-mono font-bold text-foreground">
-                      {filteredEvents.filter((e) => e.persistence_days > 20).length} / {filteredEvents.length}
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Industrial Proximity (&lt;500m):</span>
-                    <span className="font-mono font-bold text-foreground">
-                      {filteredEvents.filter((e) => e.distance_to_industry <= 500).length} / {filteredEvents.length}
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Night Activity Dominant (&gt;80%):</span>
-                    <span className="font-mono font-bold text-foreground">
-                      {filteredEvents.filter((e) => e.night_ratio >= 0.8).length} / {filteredEvents.length}
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Mean Anomaly FRP:</span>
-                    <span className="font-mono font-bold text-foreground">
-                      {stats.avgFRP} MW
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div> */}
           </TabsContent>
         </Tabs>
       </main>

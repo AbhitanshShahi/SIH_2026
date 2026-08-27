@@ -29,13 +29,12 @@ export function MapControls({
   onToggleOSMIndustry,
 }: MapControlsProps) {
   return (
-    <div className="absolute top-4 right-4 z-[400] flex flex-col gap-2">
-      {/* Zoom controls */}
-      <div className="bg-white/95 backdrop-blur-md rounded-xl border border-border shadow-md overflow-hidden flex flex-col">
+    <div className="absolute top-4 right-4 z-[400] flex flex-col gap-3">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-white/95 mira-shadow">
         <Button
           variant="ghost"
           size="sm"
-          className="size-9 p-0 rounded-none border-b border-border/50 hover:bg-muted"
+          className="size-11 rounded-none border-b border-border p-0 hover:bg-muted"
           onClick={onZoomIn}
           title="Zoom in"
           aria-label="Zoom in"
@@ -45,7 +44,7 @@ export function MapControls({
         <Button
           variant="ghost"
           size="sm"
-          className="size-9 p-0 rounded-none hover:bg-muted"
+          className="size-11 rounded-none p-0 hover:bg-muted"
           onClick={onZoomOut}
           title="Zoom out"
           aria-label="Zoom out"
@@ -54,15 +53,14 @@ export function MapControls({
         </Button>
       </div>
 
-      {/* Overlay layer controls */}
-      <div className="bg-white/95 backdrop-blur-md rounded-xl border border-border shadow-md overflow-hidden flex flex-col">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-white/95 mira-shadow">
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
               <Button
                 variant="ghost"
                 size="sm"
-                className="size-9 p-0 hover:bg-muted"
+                className="size-11 p-0 hover:bg-muted"
                 title="Map overlays"
                 aria-label="Map overlays"
               >
@@ -98,7 +96,7 @@ export function MapControls({
         <Button
           variant="ghost"
           size="sm"
-          className="size-9 p-0 border-t border-border/50 hover:bg-muted"
+          className="size-11 rounded-none border-t border-border p-0 hover:bg-muted"
           onClick={onResetView}
           title="Reset to all India bounds"
           aria-label="Reset View"

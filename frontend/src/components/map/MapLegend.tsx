@@ -30,10 +30,10 @@ export function MapLegend() {
   ];
 
   return (
-    <div className="absolute bottom-4 left-4 z-[400] bg-white/95 backdrop-blur-md p-3 rounded-xl border border-border shadow-md max-w-xs text-xs">
-      <div className="font-medium text-foreground mb-2 flex items-center justify-between">
-        <span>Thermal Classification Key</span>
-        <span className="text-[10px] text-muted-foreground font-mono">NASA FIRMS</span>
+    <div className="absolute bottom-4 left-4 z-[400] max-w-xs rounded-3xl border border-border bg-white/95 p-3 text-xs mira-shadow">
+      <div className="mb-3 flex items-center justify-between text-foreground">
+        <span>Classification</span>
+        <span className="font-mono text-[10px] text-muted-foreground">FIRMS</span>
       </div>
       <div className="grid grid-cols-2 gap-2">
         {items.map((item) => {
@@ -48,7 +48,7 @@ export function MapLegend() {
           );
         })}
       </div>
-      <div className="mt-2 pt-2 border-t border-border/60 flex items-center justify-between text-[10px] text-muted-foreground">
+      <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-[10px] text-muted-foreground">
         <span>FRP Scale:</span>
         <div className="flex items-center gap-1">
           <span>Low (20 MW)</span>
