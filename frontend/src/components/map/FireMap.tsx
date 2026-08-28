@@ -52,6 +52,13 @@ function getMarkerColors(classification: ClassificationType): {
         badgeBg: "#FFFBEB",
         textColor: "#92400E",
       };
+    case "Other Thermal Anomaly":
+      return {
+        coreColor: "#64748B", // Slate-500
+        glowColor: "rgba(100, 116, 139, 0.3)",
+        badgeBg: "#F1F5F9",
+        textColor: "#475569",
+      };
     default:
       return {
         coreColor: "#6B7280", // Slate-500

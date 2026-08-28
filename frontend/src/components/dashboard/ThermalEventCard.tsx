@@ -1,7 +1,7 @@
 import React from "react";
 import { ThermalEvent, ClassificationType, getConfidenceLevel } from "@/types/thermal";
 import { Badge } from "@/components/ui/badge";
-import { Flame, Trees, Sparkles, HelpCircle, MapPin, Clock, Calendar } from "lucide-react";
+import { Flame, Trees, Sparkles, HelpCircle, MapPin, Clock, Calendar, Building2 } from "lucide-react";
 
 interface ThermalEventCardProps {
   event: ThermalEvent;
@@ -32,6 +32,13 @@ function getBadgeStyle(classification: ClassificationType) {
         icon: Sparkles,
         iconColor: "text-amber-600",
         indicator: "bg-amber-500",
+      };
+    case "Other Thermal Anomaly":
+      return {
+        badge: "bg-slate-100 text-slate-700 border-slate-200",
+        icon: Building2,
+        iconColor: "text-slate-600",
+        indicator: "bg-slate-500",
       };
     default:
       return {
@@ -93,32 +100,37 @@ export function ThermalEventCard({ event, isSelected, onSelect }: ThermalEventCa
       </div>
 
       <div className="mb-3">
-        <h4 className="truncate text-sm text-foreground">
-          {event.nearby_facility || `${event.land_cover} Event`}
+        <h4 className="truncate text-sm font-medium text-foreground">
+          {event.nearby_facility || `${event.land_cover} event`}
         </h4>
         <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
           <MapPin className="size-3 shrink-0" aria-hidden="true" />
           <span className="font-mono">
-            {event.location.latitude.toFixed(2)}°N, {event.location.longitude.toFixed(2)}°E
+            {event.location.latitude.toFixed(3)}°N, {event.location.longitude.toFixed(3)}°E
           </span>
-          {event.distance_to_industry <= 1000 && (
-            <span>({event.distance_to_industry}m)</span>
-          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 rounded-xl bg-muted px-3 py-2 text-xs">
+      <div className="grid grid-cols-4 gap-2 rounded-xl bg-muted/70 px-3 py-2 text-xs">
         <div>
-          <span className="block text-[11px] text-muted-foreground">FRP</span>
-          <span className="font-mono text-foreground">{event.frp} MW</span>
+          <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">FRP</span>
+          <span className="font-mono text-foreground">{event.frp}</span>
         </div>
         <div>
-          <span className="block text-[11px] text-muted-foreground">Days</span>
-          <span className="font-mono text-foreground">{event.persistence_days}</span>
+          <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">Persistence</span>
+          <span className="font-mono text-foreground">{event.persistence_days}d</span>
         </div>
         <div>
-          <span className="block text-[11px] text-muted-foreground">Night</span>
+          <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">Night</span>
           <span className="font-mono text-foreground">{Math.round(event.night_ratio * 100)}%</span>
+        </div>
+        <div>
+          <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">Nearest</span>
+          <span className="font-mono text-foreground">
+            {event.distance_to_industry >= 1000
+              ? `${(event.distance_to_industry / 1000).toFixed(1)}km`
+              : `${Math.round(event.distance_to_industry)}m`}
+          </span>
         </div>
       </div>
 

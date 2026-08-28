@@ -17,6 +17,12 @@ interface BackendGeoJSONFeature {
     confidence: number | null;
     risk_level: string | null;
     reasoning: string[];
+    distance_to_industry: number | null;
+    persistence_days: number | null;
+    night_ratio: number | null;
+    cluster_size: number | null;
+    nearby_facility: string | null;
+    land_cover: string | null;
   };
 }
 
@@ -26,7 +32,7 @@ interface BackendGeoJSONCollection {
 }
 
 const classificationById: Record<number, ClassificationType> = {
-  0: "Unknown",
+  0: "Other Thermal Anomaly",
   1: "Industrial Source",
   2: "Gas Flare",
 };
@@ -51,11 +57,12 @@ function mapBackendFeature(feature: BackendGeoJSONFeature): ThermalEvent {
     risk_level: (properties.risk_level as RiskLevel) ?? "Low",
     frp: properties.frp ?? 0,
     brightness_temperature: properties.brightness ?? 0,
-    persistence_days: 0,
-    night_ratio: 0,
-    cluster_size: 1,
-    distance_to_industry: isIndustrial ? 0 : 10_000,
-    land_cover: isIndustrial ? "Industrial monitoring area" : "Unclassified land cover",
+    persistence_days: properties.persistence_days ?? 0,
+    night_ratio: properties.night_ratio ?? 0,
+    cluster_size: properties.cluster_size ?? 1,
+    distance_to_industry: properties.distance_to_industry ?? (isIndustrial ? 0 : 10_000),
+    land_cover: properties.land_cover ?? (isIndustrial ? "Industrial monitoring area" : "Unclassified land cover"),
+    nearby_facility: properties.nearby_facility ?? undefined,
     reasoning: properties.reasoning ?? [],
     timestamp: properties.timestamp,
     satellite: properties.satellite ? satelliteByBackendValue[properties.satellite.toUpperCase()] : undefined,
@@ -63,12 +70,9 @@ function mapBackendFeature(feature: BackendGeoJSONFeature): ThermalEvent {
 }
 
 export async function fetchHotspots(params?: {
-  region?: string;
-  date?: string;
   minFRP?: number;
 }): Promise<HotspotFeatureCollection> {
   const queryParams = new URLSearchParams();
-  if (params?.date) queryParams.append("start_date", `${params.date}T00:00:00Z`);
   if (params?.minFRP) queryParams.append("min_frp", params.minFRP.toString());
 
   const queryString = queryParams.toString();

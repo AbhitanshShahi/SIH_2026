@@ -13,17 +13,12 @@ export function Header({ onOpenSimulator, activeCount }: HeaderProps) {
     <header className="sticky top-0 z-40 w-full border-b border-border bg-white mira-shadow">
       <div className="mx-auto flex max-w-7xl flex-col justify-between gap-3 px-3 py-3 sm:flex-row sm:items-center sm:px-6">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border bg-white text-primary">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-amber-500 text-white shadow-sm">
             <Flame className="size-5" aria-hidden="true" />
           </div>
-          <div>
-            <h1 className="text-base tracking-tight text-foreground sm:text-lg">
-              AgniDrishti
-            </h1>
-            <p className="line-clamp-1 text-xs text-muted-foreground">
-              Talcher, Odisha · Thermal intelligence
-            </p>
-          </div>
+          <h1 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
+            AgniDrishti
+          </h1>
         </div>
 
         <div className="flex items-center gap-2 sm:self-center">

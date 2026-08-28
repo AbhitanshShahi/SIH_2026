@@ -39,7 +39,10 @@ export function EventTable({ events, selectedEvent, onSelectEvent }: EventTableP
               <TableHead className="text-right text-xs font-normal">Confidence</TableHead>
               <TableHead className="text-right text-xs font-normal">FRP (MW)</TableHead>
               <TableHead className="text-right text-xs font-normal">Persistence</TableHead>
-              <TableHead className="text-xs font-normal">Location</TableHead>
+              <TableHead className="text-right text-xs font-normal">Night</TableHead>
+              <TableHead className="text-right text-xs font-normal">Nearest facility</TableHead>
+              <TableHead className="text-right text-xs font-normal">Cluster</TableHead>
+              <TableHead className="max-w-[220px] text-xs font-normal">Location</TableHead>
               <TableHead className="text-right text-xs font-normal">Action</TableHead>
             </TableRow>
           </TableHeader>
@@ -59,10 +62,12 @@ export function EventTable({ events, selectedEvent, onSelectEvent }: EventTableP
                       className={`text-[11px] font-normal ${
                         event.classification === "Industrial Source"
                           ? "border-red-200 bg-red-50 text-red-700"
-                          : event.classification === "Natural Fire"
+                          : event.classification === "Natural Fire" || event.classification === "Wildfire"
                           ? "border-blue-200 bg-blue-50 text-blue-700"
                           : event.classification === "Gas Flare"
                           ? "border-amber-200 bg-amber-50 text-amber-700"
+                          : event.classification === "Other Thermal Anomaly"
+                          ? "border-slate-200 bg-slate-100 text-slate-700"
                           : "border-border bg-muted text-foreground"
                       }`}
                     >
@@ -91,10 +96,21 @@ export function EventTable({ events, selectedEvent, onSelectEvent }: EventTableP
                   <TableCell className="text-right font-mono text-xs text-muted-foreground">
                     {event.persistence_days}d
                   </TableCell>
+                  <TableCell className="text-right font-mono text-xs text-muted-foreground">
+                    {Math.round(event.night_ratio * 100)}%
+                  </TableCell>
+                  <TableCell className="max-w-[180px] truncate text-right text-xs text-muted-foreground">
+                    {event.nearby_facility || "—"}
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-xs text-muted-foreground">
+                    {event.cluster_size}
+                  </TableCell>
                   <TableCell className="max-w-[200px] truncate text-xs text-foreground">
                     <div className="flex items-center gap-1">
                       <MapPin className="size-3 shrink-0 text-muted-foreground" aria-hidden="true" />
-                      <span className="truncate">{event.nearby_facility || event.land_cover}</span>
+                      <span className="truncate">
+                        {event.location.latitude.toFixed(3)}°, {event.location.longitude.toFixed(3)}°
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell className="text-right">

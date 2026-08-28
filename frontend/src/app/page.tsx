@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { ThermalEvent, FilterOptions } from "@/types/thermal";
 import { fetchHotspots, computeDashboardStats } from "@/services/hotspotService";
@@ -14,8 +14,14 @@ import { HotspotDetails } from "@/components/dashboard/HotspotDetails";
 import { EventTable } from "@/components/dashboard/EventTable";
 import { PredictionSimulator } from "@/components/shared/PredictionSimulator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Map as MapIcon, Table as TableIcon, BarChart3, Radio, RefreshCw, Flame } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Map as MapIcon, Table as TableIcon, BarChart3, Radio, RefreshCw, Flame, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const REFRESH_INTERVAL_MS =
+  Number(process.env.NEXT_PUBLIC_REFRESH_INTERVAL_SECONDS ?? 30) * 1000;
+const AUTO_SYNC_INTERVAL_MS =
+  Number(process.env.NEXT_PUBLIC_AUTO_SYNC_INTERVAL_SECONDS ?? 60) * 1000;
 
 // Dynamically import FireMap to prevent Leaflet SSR issues
 const FireMap = dynamic(
@@ -44,7 +50,6 @@ export default function DashboardPage() {
   const [filters, setFilters] = useState<FilterOptions>({
     classification: "All",
     riskLevel: "All",
-    region: "angul",
     minFRP: 0,
     frpLevel: "All",
     minConfidence: 0,
@@ -52,26 +57,34 @@ export default function DashboardPage() {
     searchQuery: "",
   });
 
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [now, setNow] = useState<number>(() => Date.now());
+  const [liveEnabled, setLiveEnabled] = useState<boolean>(true);
+  const [isAutoSyncing, setIsAutoSyncing] = useState<boolean>(false);
+  const autoSyncRef = useRef<number>(0);
+  const syncingRef = useRef<boolean>(false);
+
   // Load initial hotspots
-  const loadData = async () => {
-    setIsLoading(true);
+  const loadData = async (options?: { silent?: boolean }) => {
+    const silent = options?.silent;
+    if (!silent) setIsLoading(true);
     setConnectionError(null);
     try {
-      const collection = await fetchHotspots({
-        region: filters.region,
-        minFRP: filters.minFRP,
-      });
+      const collection = await fetchHotspots({ minFRP: filters.minFRP });
       const events = collection.features.map((f) => f.properties);
       setAllEvents(events);
       if (events.length > 0 && !selectedEvent) {
         setSelectedEvent(events[0]);
       }
+      setLastUpdated(new Date());
     } catch (err) {
       console.error("Failed to load hotspots:", err);
-      setAllEvents([]);
-      setConnectionError("Unable to load backend telemetry. Confirm the API is running at the configured NEXT_PUBLIC_API_URL.");
+      if (!silent) {
+        setAllEvents([]);
+        setConnectionError("Unable to load backend telemetry. Confirm the API is running at the configured NEXT_PUBLIC_API_URL.");
+      }
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
@@ -80,7 +93,43 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.region, filters.minFRP]);
+  }, [filters.minFRP]);
+
+  // Tick the freshness clock while live mode is active.
+  useEffect(() => {
+    if (!liveEnabled) return;
+    const id = setInterval(() => setNow(Date.now()), 5000);
+    return () => clearInterval(id);
+  }, [liveEnabled]);
+
+  // Real-time polling: silently refresh events on a fixed cadence and
+  // periodically pull fresh FIRMS detections through the backend.
+  useEffect(() => {
+    if (!liveEnabled) return;
+
+    const tick = async () => {
+      const needSync = Date.now() - autoSyncRef.current >= AUTO_SYNC_INTERVAL_MS;
+      if (needSync && !syncingRef.current) {
+        syncingRef.current = true;
+        setIsAutoSyncing(true);
+        try {
+          await syncLiveTelemetry(1);
+          autoSyncRef.current = Date.now();
+        } catch (err) {
+          console.error("Auto-sync failed:", err);
+        } finally {
+          syncingRef.current = false;
+          setIsAutoSyncing(false);
+        }
+      }
+      await loadData({ silent: true });
+    };
+
+    tick();
+    const id = setInterval(tick, REFRESH_INTERVAL_MS);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveEnabled, filters.minFRP]);
 
   // Client-side filtering
   const filteredEvents = useMemo(() => {
@@ -100,26 +149,10 @@ export default function DashboardPage() {
 
       if (filters.minConfidence > 0 && event.confidence < filters.minConfidence) return false;
       if (filters.satellite !== "All" && event.satellite !== filters.satellite) return false;
-      const eventDate = event.timestamp.slice(0, 10);
-      if (filters.dateRange?.from && eventDate < filters.dateRange.from) return false;
-      if (filters.dateRange?.to && eventDate > filters.dateRange.to) return false;
-      if (filters.frpLevel === "Low" && event.frp >= 50) return false;
-      if (filters.frpLevel === "Moderate" && (event.frp < 50 || event.frp >= 100)) return false;
-      if (filters.frpLevel === "High" && (event.frp < 100 || event.frp >= 150)) return false;
-      if (filters.frpLevel === "Extreme" && event.frp < 150) return false;
-
-      // Region quick coordinates filter
-      if (filters.region === "gujarat") {
-        if (event.location.longitude < 68 || event.location.longitude > 74) return false;
-      } else if (filters.region === "angul") {
-        if (event.location.longitude < 83 || event.location.longitude > 87) return false;
-      } else if (filters.region === "mumbai") {
-        if (event.location.longitude < 71 || event.location.longitude > 74) return false;
-      } else if (filters.region === "forest") {
-        if (event.classification !== "Natural Fire" && event.classification !== "Wildfire") return false;
-      } else if (filters.region === "punjab") {
-        if (event.location.latitude < 29 || event.location.latitude > 32) return false;
-      }
+      if (filters.frpLevel === "Low" && event.frp >= 3) return false;
+      if (filters.frpLevel === "Moderate" && (event.frp < 3 || event.frp >= 8)) return false;
+      if (filters.frpLevel === "High" && (event.frp < 8 || event.frp >= 20)) return false;
+      if (filters.frpLevel === "Extreme" && event.frp < 20) return false;
 
       // Search Query filter
       if (filters.searchQuery.trim() !== "") {
@@ -151,13 +184,22 @@ export default function DashboardPage() {
     setFilters({
       classification: "All",
       riskLevel: "All",
-      region: "all",
       minFRP: 0,
       frpLevel: "All",
       minConfidence: 0,
       satellite: "All",
       searchQuery: "",
     });
+  };
+
+  const formatUpdated = (dt: Date | null) => {
+    if (!dt) return "Waiting for data";
+    const s = Math.max(0, Math.round((now - dt.getTime()) / 1000));
+    if (s < 5) return "Updated just now";
+    if (s < 60) return `Updated ${s}s ago`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `Updated ${m}m ago`;
+    return `Updated ${dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
   };
 
   const handleSyncTelemetry = async () => {
@@ -202,7 +244,7 @@ export default function DashboardPage() {
 
         {/* View Switcher Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-3">
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-center">
             <TabsList className="h-11 rounded-xl border border-border bg-white p-1 mira-shadow">
               <TabsTrigger value="map" className="h-9 gap-1.5 rounded-lg px-3 text-xs font-normal">
                 <MapIcon className="size-3.5" />
@@ -218,16 +260,56 @@ export default function DashboardPage() {
               </TabsTrigger>
             </TabsList>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSyncTelemetry}
-              disabled={isLoading}
-              className="h-11 rounded-xl bg-white px-3 text-xs font-normal"
-            >
-              <RefreshCw className={`size-3.5 ${isLoading ? "animate-spin" : ""}`} />
-              Sync
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <div
+                className="flex h-11 items-center gap-2 rounded-xl border border-border bg-white px-3 mira-shadow"
+                aria-live="polite"
+              >
+                <span className="relative flex size-2" aria-hidden="true">
+                  <span
+                    className={`absolute inline-flex size-full rounded-full opacity-75 ${
+                      liveEnabled ? "animate-ping bg-emerald-400" : "bg-slate-300"
+                    }`}
+                  />
+                  <span
+                    className={`relative inline-flex size-2 rounded-full ${
+                      liveEnabled ? "bg-emerald-500" : "bg-slate-400"
+                    }`}
+                  />
+                </span>
+                <span className="whitespace-nowrap text-[11px] font-medium text-foreground">
+                  {liveEnabled ? "Live" : "Paused"}
+                </span>
+                <span className="whitespace-nowrap text-[11px] text-muted-foreground">
+                  {isAutoSyncing ? "Syncing…" : formatUpdated(lastUpdated)}
+                </span>
+                {isAutoSyncing && <Loader2 className="size-3.5 animate-spin text-muted-foreground" aria-hidden="true" />}
+              </div>
+
+              <div
+                className="flex h-11 items-center gap-2 rounded-xl border border-border bg-white px-3 mira-shadow"
+                title="Auto-refresh detections every 30 seconds"
+              >
+                <span className="whitespace-nowrap text-[11px] text-muted-foreground">Auto</span>
+                <Switch
+                  size="sm"
+                  checked={liveEnabled}
+                  onCheckedChange={(checked) => setLiveEnabled(checked)}
+                  aria-label="Toggle live updates"
+                />
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSyncTelemetry}
+                disabled={isLoading}
+                className="h-11 rounded-xl bg-white px-3 text-xs font-normal"
+              >
+                <RefreshCw className={`size-3.5 ${isLoading ? "animate-spin" : ""}`} />
+                Sync
+              </Button>
+            </div>
           </div>
 
           {/* TAB 1: GIS Spatial Map + Live Feed (Primary Workspace) */}
