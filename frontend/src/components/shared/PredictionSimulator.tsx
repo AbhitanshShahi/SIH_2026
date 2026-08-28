@@ -279,8 +279,8 @@ export function PredictionSimulator({
                   className={`text-xs font-bold px-3 py-1 ${
                     result.classification === "Industrial Source"
                       ? "bg-red-600 hover:bg-red-700 text-white"
-                      : result.classification === "Natural Fire"
-                      ? "bg-blue-600 hover:bg-blue-700 text-white"
+                      : result.classification === "Other Thermal Anomaly" || result.classification === "Unknown"
+                      ? "bg-slate-700 hover:bg-slate-800 text-white"
                       : result.classification === "Gas Flare"
                       ? "bg-amber-600 hover:bg-amber-700 text-white"
                       : "bg-slate-700 text-white"

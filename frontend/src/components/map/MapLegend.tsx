@@ -1,5 +1,5 @@
 import React from "react";
-import { Flame, Trees, Sparkles, HelpCircle } from "lucide-react";
+import { Flame, Sparkles, Building2 } from "lucide-react";
 
 export function MapLegend() {
   const items = [
@@ -10,22 +10,16 @@ export function MapLegend() {
       desc: "Refineries, smelters, mills",
     },
     {
-      label: "Natural Fire",
-      color: "bg-blue-600 border-blue-200 text-blue-700",
-      icon: Trees,
-      desc: "Wildfires & forest burns",
-    },
-    {
       label: "Gas Flare",
       color: "bg-amber-500 border-amber-200 text-amber-700",
       icon: Sparkles,
-      desc: "Petroleum flare stacks",
+      desc: "Continuous combustion",
     },
     {
-      label: "Crop / Unknown",
+      label: "Other Anomaly",
       color: "bg-slate-500 border-slate-200 text-slate-700",
-      icon: HelpCircle,
-      desc: "Agriculture & low-FRP events",
+      icon: Building2,
+      desc: "Unclassified thermal source",
     },
   ];
 
@@ -51,9 +45,9 @@ export function MapLegend() {
       <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-[10px] text-muted-foreground">
         <span>FRP Scale:</span>
         <div className="flex items-center gap-1">
-          <span>Low (20 MW)</span>
+          <span>Low (&lt;3 MW)</span>
           <div className="h-1.5 w-12 rounded bg-gradient-to-r from-amber-400 via-orange-500 to-red-600" />
-          <span>High (200+ MW)</span>
+          <span>High (20+ MW)</span>
         </div>
       </div>
     </div>

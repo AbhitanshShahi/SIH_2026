@@ -1,7 +1,8 @@
 export type ClassificationType =
   | "Industrial Source"
-  | "Natural Fire"
   | "Gas Flare"
+  | "Other Thermal Anomaly"
+  | "Natural Fire"
   | "Wildfire"
   | "Crop Burning"
   | "Unknown";
@@ -101,15 +102,10 @@ export interface PredictResponse {
 export interface FilterOptions {
   classification: ClassificationType | "All";
   riskLevel: RiskLevel | "All";
-  region: string;
   minFRP: number;
   frpLevel: FrpLevel;
   minConfidence: number;
   satellite: SatelliteSource | "All";
-  dateRange?: {
-    from?: string;
-    to?: string;
-  };
   searchQuery: string;
 }
 

@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CalendarDays, Search, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { Search, RotateCcw, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface FilterBarProps {
@@ -28,22 +28,19 @@ function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.R
 
 export function FilterBar({ filters, onChange, onReset, totalFiltered }: FilterBarProps) {
   const satellites: SatelliteSource[] = ["Suomi NPP / VIIRS", "NOAA-20 / VIIRS", "Terra / MODIS", "Aqua / MODIS"];
-  const updateDateRange = (key: "from" | "to", value: string) => {
-    onChange({ ...filters, dateRange: { ...filters.dateRange, [key]: value } });
-  };
-  const regions = [
-    { value: "angul", label: "Odisha (Talcher-Angul Belt)" },
-    { value: "all", label: "All Regions (National View)" },
-    { value: "similipal", label: "Odisha (Similipal Reserves)" },
-    { value: "gujarat", label: "Gujarat Petrochemical Belt" },
-    { value: "mumbai", label: "Mumbai Offshore Oil & Gas" },
-    { value: "punjab", label: "Punjab Agricultural Plain" },
-  ];
 
   const controlClass = "h-11 w-full min-w-[140px] rounded-xl border-border bg-muted/60 text-xs sm:w-auto";
 
+  const activeFilterCount = [
+    filters.classification !== "All",
+    filters.riskLevel !== "All",
+    filters.satellite !== "All",
+    filters.frpLevel !== "All",
+    filters.minConfidence > 0,
+  ].filter(Boolean).length;
+
   return (
-    <div className="w-full space-y-3 rounded-3xl border border-border bg-white p-3 mira-shadow">
+    <div className="w-full rounded-3xl border border-border bg-white p-3 mira-shadow">
       <div className="flex flex-wrap items-end gap-3">
         <div className="min-w-[180px] max-w-xs flex-1">
           <FieldLabel htmlFor="event-search">Search</FieldLabel>
@@ -53,51 +50,8 @@ export function FilterBar({ filters, onChange, onReset, totalFiltered }: FilterB
               id="event-search"
               value={filters.searchQuery}
               onChange={(e) => onChange({ ...filters, searchQuery: e.target.value })}
-              placeholder="Facility, coordinate, or ID"
+              placeholder="Facility, land cover, or event ID"
               className="h-11 rounded-xl border-border bg-muted/60 pl-8 text-xs"
-            />
-          </div>
-        </div>
-
-        <div>
-          <FieldLabel>Region</FieldLabel>
-          <Select
-            value={filters.region}
-            onValueChange={(val) => {
-              if (val) onChange({ ...filters, region: val });
-            }}
-          >
-            <SelectTrigger className={controlClass} aria-label="Region">
-              <SelectValue placeholder="Select Region" />
-            </SelectTrigger>
-            <SelectContent className="z-[500] bg-white">
-              {regions.map((r) => (
-                <SelectItem key={r.value} value={r.value} className="text-xs">
-                  {r.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <FieldLabel>Date range</FieldLabel>
-          <div className="flex h-11 items-center gap-1 rounded-xl border border-border bg-muted/60 px-2" aria-label="Detection date range">
-            <CalendarDays className="size-3.5 text-muted-foreground" aria-hidden="true" />
-            <Input
-              aria-label="Start date"
-              type="date"
-              value={filters.dateRange?.from ?? ""}
-              onChange={(e) => updateDateRange("from", e.target.value)}
-              className="h-9 w-[118px] border-0 bg-transparent px-0 text-xs shadow-none focus-visible:ring-0"
-            />
-            <span className="text-xs text-muted-foreground">to</span>
-            <Input
-              aria-label="End date"
-              type="date"
-              value={filters.dateRange?.to ?? ""}
-              onChange={(e) => updateDateRange("to", e.target.value)}
-              className="h-9 w-[118px] border-0 bg-transparent px-0 text-xs shadow-none focus-visible:ring-0"
             />
           </div>
         </div>
@@ -116,10 +70,8 @@ export function FilterBar({ filters, onChange, onReset, totalFiltered }: FilterB
             <SelectContent className="z-[500] bg-white">
               <SelectItem value="All" className="text-xs">All types</SelectItem>
               <SelectItem value="Industrial Source" className="text-xs">Industrial Source</SelectItem>
-              <SelectItem value="Natural Fire" className="text-xs">Natural Fire</SelectItem>
               <SelectItem value="Gas Flare" className="text-xs">Gas Flare</SelectItem>
-              <SelectItem value="Crop Burning" className="text-xs">Crop Burning</SelectItem>
-              <SelectItem value="Unknown" className="text-xs">Unknown</SelectItem>
+              <SelectItem value="Other Thermal Anomaly" className="text-xs">Other Thermal Anomaly</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -183,18 +135,23 @@ export function FilterBar({ filters, onChange, onReset, totalFiltered }: FilterB
             </SelectTrigger>
             <SelectContent className="z-[500] bg-white">
               <SelectItem value="All" className="text-xs">All FRP</SelectItem>
-              <SelectItem value="Low" className="text-xs">Low (&lt;50 MW)</SelectItem>
-              <SelectItem value="Moderate" className="text-xs">Moderate (50–99 MW)</SelectItem>
-              <SelectItem value="High" className="text-xs">High (100–149 MW)</SelectItem>
-              <SelectItem value="Extreme" className="text-xs">Extreme (150+ MW)</SelectItem>
+              <SelectItem value="Low" className="text-xs">Low (&lt;3 MW)</SelectItem>
+              <SelectItem value="Moderate" className="text-xs">Moderate (3–8 MW)</SelectItem>
+              <SelectItem value="High" className="text-xs">High (8–20 MW)</SelectItem>
+              <SelectItem value="Extreme" className="text-xs">Extreme (20+ MW)</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-3">
+      <div className="mt-3 flex items-center justify-end gap-3 border-t border-border pt-3">
+        {activeFilterCount > 0 && (
+          <span className="rounded-xl bg-primary/5 px-2 py-1 text-[11px] text-primary">
+            {activeFilterCount} active filter{activeFilterCount === 1 ? "" : "s"}
+          </span>
+        )}
         <span className="text-xs text-muted-foreground">
-          Showing <span className="font-mono text-foreground">{totalFiltered}</span> events
+          Showing <span className="font-mono text-sm font-medium text-foreground">{totalFiltered}</span> events
         </span>
         <Button
           variant="ghost"

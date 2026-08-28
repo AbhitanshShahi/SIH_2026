@@ -69,6 +69,12 @@ class ThermalEventBase(BaseModel):
     satellite: str | None = Field(default=None, description="Satellite sensor")
     prediction_class: int | None = Field(default=None, description="Predicted class integer")
     confidence: float | None = Field(default=None, description="Prediction confidence score")
+    distance_to_industry: float | None = Field(default=None, description="Distance to nearest OSM industry (metres)")
+    persistence_days: int | None = Field(default=None, description="Distinct days detected near this location")
+    night_ratio: float | None = Field(default=None, description="Fraction of detections acquired at night (0-1)")
+    cluster_size: int | None = Field(default=None, description="Same-day satellite passes in the local cluster")
+    nearby_facility: str | None = Field(default=None, description="Nearest OSM facility name")
+    land_cover: str | None = Field(default=None, description="Human-readable land-use label")
 
 
 class ThermalEventCreate(ThermalEventBase):
@@ -106,6 +112,12 @@ class GeoJSONProperties(BaseModel):
     confidence: float | None = None
     risk_level: str | None = None
     reasoning: list[str] = Field(default_factory=list)
+    distance_to_industry: float | None = None
+    persistence_days: int | None = None
+    night_ratio: float | None = None
+    cluster_size: int | None = None
+    nearby_facility: str | None = None
+    land_cover: str | None = None
 
 
 class GeoJSONFeature(BaseModel):

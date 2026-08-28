@@ -1,6 +1,7 @@
 import joblib
 import pandas as pd
 import requests
+import re
 from io import BytesIO
 
 MODEL_URL = "https://huggingface.co/abhitanshshahi/fire-risk-xgboost/resolve/main/xgboost_final.joblib"
@@ -49,17 +50,53 @@ encoders = {
     }
 }
 
+# FIRMS CSV often abbreviates confidence to a single letter.
+CONFIDENCE_ABBREV = {
+    "l": "low",
+    "n": "nominal",
+    "h": "high",
+}
+
+
+def _encode_column(value, mapping, fallback):
+    if value is None:
+        return fallback
+    if isinstance(value, str):
+        value = value.strip().lower()
+        value = CONFIDENCE_ABBREV.get(value, value)
+    return mapping.get(value, fallback)
+
+
+def _to_float(value, default=1.0):
+    if isinstance(value, (int, float)):
+        return float(value)
+    match = re.search(r"[0-9]+(?:\.[0-9]+)?", str(value or ""))
+    return float(match.group()) if match else default
+
+
 def preprocess_input(data):
 
     df = pd.DataFrame([data])
 
     for column, mapping in encoders.items():
+        fallback = 1 if column == "confidence" else mapping.get(mapping_default(column), 1)
         if column in df.columns:
-            df[column] = df[column].map(mapping)
+            df[column] = df[column].map(lambda v: _encode_column(v, mapping, fallback))
+
+    if "version" in df.columns:
+        df["version"] = df["version"].map(_to_float)
 
     df = df[FEATURE_ORDER]
 
     return df
+
+
+def mapping_default(column):
+    if column == "satellite":
+        return "SNPP"
+    if column == "daynight":
+        return "D"
+    return "nominal"
 
 def predict(model, data):
     processed_data = preprocess_input(data)

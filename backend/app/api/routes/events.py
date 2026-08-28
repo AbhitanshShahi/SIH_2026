@@ -63,7 +63,13 @@ def format_event_response(event: ThermalEvent) -> ThermalEventResponse:
         confidence=event.confidence,
         class_name=class_name,
         risk_level=risk_level,
-        reasoning=reasoning
+        reasoning=reasoning,
+        distance_to_industry=event.distance_to_industry,
+        persistence_days=event.persistence_days,
+        night_ratio=event.night_ratio,
+        cluster_size=event.cluster_size,
+        nearby_facility=event.nearby_facility,
+        land_cover=event.land_cover
     )
 
 
@@ -189,7 +195,13 @@ def get_thermal_events_geojson(
                 class_name=class_name,
                 confidence=ev.confidence,
                 risk_level=risk_level,
-                reasoning=reasoning
+                reasoning=reasoning,
+                distance_to_industry=ev.distance_to_industry,
+                persistence_days=ev.persistence_days,
+                night_ratio=ev.night_ratio,
+                cluster_size=ev.cluster_size,
+                nearby_facility=ev.nearby_facility,
+                land_cover=ev.land_cover
             )
         )
         features.append(feature)

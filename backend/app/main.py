@@ -12,8 +12,9 @@ from app.core.config import CORS_ORIGINS  # noqa: F401  (side-effect: sets sys.p
 from app.api.router import api_router
 from app.api.routes.health import router as health_router
 from app.core.base import Base
-from app.core.database import engine
+from app.core.database import SessionLocal, engine
 from app.models.thermal_event import ThermalEvent
+from app.services.context import backfill_context, ensure_schema
 from ml.inference.predict import load_model
 from app.services.classification import classification_service
 
@@ -38,6 +39,14 @@ async def lifespan(app: FastAPI):
         # create_all is idempotent and allows a fresh configured PostGIS
         # database to serve the dashboard without a separate migration step.
         Base.metadata.create_all(bind=engine)
+        # Add context columns for pre-existing databases and backfill the
+        # operational context so historic events expose the same live fields.
+        ensure_schema(engine)
+        db = SessionLocal()
+        try:
+            backfill_context(db)
+        finally:
+            db.close()
         logger.info("Database schema is ready.")
     except Exception:
         logger.exception("Database schema initialization failed.")

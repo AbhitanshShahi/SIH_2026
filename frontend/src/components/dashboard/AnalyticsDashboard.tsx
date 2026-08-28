@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 interface AnalyticsDashboardProps { events: ThermalEvent[]; onSelectEvent: (event: ThermalEvent) => void; }
 const chartAxis = { fill: "#666666", fontSize: 11 };
-const classificationOrder = ["Industrial Source", "Gas Flare", "Natural Fire", "Wildfire", "Crop Burning", "Unknown"];
+const classificationOrder = ["Industrial Source", "Gas Flare", "Other Thermal Anomaly"];
 
 export function AnalyticsDashboard({ events, onSelectEvent }: AnalyticsDashboardProps) {
   const analytics = useMemo(() => {
@@ -25,8 +25,8 @@ export function AnalyticsDashboard({ events, onSelectEvent }: AnalyticsDashboard
       byMonth.set(month, (byMonth.get(month) ?? 0) + 1);
       byClassification.set(event.classification, (byClassification.get(event.classification) ?? 0) + 1);
     });
-    const highFrp = events.filter((event) => event.frp >= 100).sort((a, b) => b.frp - a.frp);
-    const persistent = events.filter((event) => event.persistence_days >= 14).sort((a, b) => b.persistence_days - a.persistence_days);
+    const strongSignals = events.filter((event) => event.frp >= 8).sort((a, b) => b.frp - a.frp);
+    const persistent = events.slice().sort((a, b) => b.persistence_days - a.persistence_days || b.frp - a.frp).slice(0, 5);
     const zones = new Map<string, { name: string; events: ThermalEvent[]; maxFrp: number }>();
     events.filter((event) => event.classification === "Industrial Source" || event.classification === "Gas Flare" || event.distance_to_industry <= 500).forEach((event) => {
       const name = event.nearby_facility ?? event.land_cover;
@@ -37,8 +37,8 @@ export function AnalyticsDashboard({ events, onSelectEvent }: AnalyticsDashboard
       daily: Array.from(byDay.values()).sort((a, b) => a.date.localeCompare(b.date)).map((item) => ({ ...item, date: item.date.slice(5) })),
       monthly: Array.from(byMonth.entries()).map(([month, count]) => ({ month, events: count })),
       classification: classificationOrder.filter((name) => byClassification.has(name)).map((name) => ({ name, events: byClassification.get(name) ?? 0 })),
-      otherAnomalies: events.filter((event) => !["Industrial Source", "Gas Flare", "Natural Fire", "Wildfire"].includes(event.classification)).length,
-      highFrp, persistent, zones: Array.from(zones.values()).sort((a, b) => b.maxFrp - a.maxFrp),
+      otherAnomalies: events.filter((event) => !["Industrial Source", "Gas Flare"].includes(event.classification)).length,
+      highFrp: strongSignals, persistent, zones: Array.from(zones.values()).sort((a, b) => b.maxFrp - a.maxFrp),
     };
   }, [events]);
 
@@ -61,8 +61,8 @@ export function AnalyticsDashboard({ events, onSelectEvent }: AnalyticsDashboard
     </section>
     <section aria-labelledby="risk-monitoring-heading"><SectionHeading id="risk-monitoring-heading" icon={AlertTriangle} label="Risk monitoring" />
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-        <RiskList title="High-FRP events" description="At or above 100 MW" events={analytics.highFrp} metric={(event) => `${event.frp} MW`} empty="No high-FRP events in this view." onSelectEvent={onSelectEvent} />
-        <RiskList title="Persistent hotspots" description="Detected for 14+ days" events={analytics.persistent} metric={(event) => `${event.persistence_days} days`} empty="No persistent hotspots in this view." onSelectEvent={onSelectEvent} />
+        <RiskList title="Strong thermal signals" description="Highest FRP detections in this view" events={analytics.highFrp} metric={(event) => `${event.frp} MW`} empty="No high-FRP events in this view." onSelectEvent={onSelectEvent} />
+        <RiskList title="Persistent signatures" description="Longest-lived detections in this view" events={analytics.persistent} metric={(event) => `${event.persistence_days} day${event.persistence_days === 1 ? "" : "s"}`} empty="No persistent hotspots in this view." onSelectEvent={onSelectEvent} />
         <Card className="rounded-3xl border-border mira-shadow"><CardHeader className="pb-2"><CardTitle className="text-sm font-normal">Industrial zones with activity</CardTitle><CardDescription className="text-xs">Grouped by associated facility or industrial land cover.</CardDescription></CardHeader><CardContent className="space-y-3">{analytics.zones.length ? analytics.zones.map((zone) => <div key={zone.name} className="rounded-3xl border border-border bg-muted p-3"><div className="flex items-start justify-between gap-2"><p className="text-xs leading-5">{zone.name}</p><Badge variant="outline" className="shrink-0 text-[10px] font-normal">{zone.events.length} event{zone.events.length === 1 ? "" : "s"}</Badge></div><p className="mt-1 text-[11px] text-muted-foreground">Peak FRP <span className="font-mono text-foreground">{zone.maxFrp} MW</span></p></div>) : <EmptyState text="No industrial activity matches the current filters." />}</CardContent></Card>
       </div>
     </section>
