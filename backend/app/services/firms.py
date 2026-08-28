@@ -67,8 +67,8 @@ class FirmsService:
         URL format: https://firms.modaps.eosdis.nasa.gov/api/area/csv/[MAP_KEY]/[SOURCE]/[BBOX]/[DAYS]
         """
         if not self.is_configured():
-            logger.warning("FIRMS_MAP_KEY is not configured in .env. Falling back to sample observations.")
-            return self.get_sample_observations()
+            logger.error("FIRMS_MAP_KEY is not configured in .env. Falling back to sample observations.")
+            return []
 
         url = f"https://firms.modaps.eosdis.nasa.gov/api/area/csv/{self.map_key}/{source}/{TALCHER_BBOX}/{day_range}"
 
@@ -80,6 +80,11 @@ class FirmsService:
                     return []
 
                 csv_text = response.text.strip()
+                logger.info(
+                "FIRMS response for %s: %s",
+                source,
+                csv_text[:2000],
+            )
                 if not csv_text or "Bad request" in csv_text or "Invalid MAP_KEY" in csv_text or "Invalid source" in csv_text or "Invalid day range" in csv_text:
                     logger.warning(f"NASA FIRMS API error message: {csv_text}")
                     return []
