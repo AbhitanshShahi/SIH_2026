@@ -15,13 +15,8 @@ import { EventTable } from "@/components/dashboard/EventTable";
 import { PredictionSimulator } from "@/components/shared/PredictionSimulator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Map as MapIcon, Table as TableIcon, BarChart3, Radio, RefreshCw, Flame, Loader2 } from "lucide-react";
+import { Map as MapIcon, Table as TableIcon, BarChart3, Radio, RefreshCw, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const REFRESH_INTERVAL_MS =
-  Number(process.env.NEXT_PUBLIC_REFRESH_INTERVAL_SECONDS ?? 30) * 1000;
-const AUTO_SYNC_INTERVAL_MS =
-  Number(process.env.NEXT_PUBLIC_AUTO_SYNC_INTERVAL_SECONDS ?? 60) * 1000;
 
 // Dynamically import FireMap to prevent Leaflet SSR issues
 const FireMap = dynamic(
@@ -60,9 +55,6 @@ export default function DashboardPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [now, setNow] = useState<number>(() => Date.now());
   const [liveEnabled, setLiveEnabled] = useState<boolean>(true);
-  const [isAutoSyncing, setIsAutoSyncing] = useState<boolean>(false);
-  const autoSyncRef = useRef<number>(0);
-  const syncingRef = useRef<boolean>(false);
 
   // Load initial hotspots
   const loadData = async (options?: { silent?: boolean }) => {
@@ -102,34 +94,83 @@ export default function DashboardPage() {
     return () => clearInterval(id);
   }, [liveEnabled]);
 
-  // Real-time polling: silently refresh events on a fixed cadence and
-  // periodically pull fresh FIRMS detections through the backend.
+  const loadDataRef = useRef(loadData);
+  useEffect(() => {
+    loadDataRef.current = loadData;
+  }, [loadData]);
+
+  // WebSocket integration for real-time updates
   useEffect(() => {
     if (!liveEnabled) return;
 
-    const tick = async () => {
-      const needSync = Date.now() - autoSyncRef.current >= AUTO_SYNC_INTERVAL_MS;
-      if (needSync && !syncingRef.current) {
-        syncingRef.current = true;
-        setIsAutoSyncing(true);
-        try {
-          await syncLiveTelemetry(1);
-          autoSyncRef.current = Date.now();
-        } catch (err) {
-          console.error("Auto-sync failed:", err);
-        } finally {
-          syncingRef.current = false;
-          setIsAutoSyncing(false);
-        }
+    let ws: WebSocket | null = null;
+    let reconnectTimeoutId: NodeJS.Timeout;
+    let isActive = true;
+
+    const connect = () => {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+      const wsProtocol = apiBase.startsWith("https") ? "wss" : "ws";
+      let wsBase = apiBase.replace(/^https?:\/\//, "");
+      
+      // Fix IPv6 localhost resolution issues for WebSockets
+      if (wsBase.startsWith("localhost")) {
+        wsBase = wsBase.replace("localhost", "127.0.0.1");
       }
-      await loadData({ silent: true });
+      
+      const wsUrl = `${wsProtocol}://${wsBase}/live/ws`;
+
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        if (!isActive) return;
+        console.log("WebSocket connected to", wsUrl);
+      };
+
+      ws.onmessage = (event) => {
+        if (!isActive) return;
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "data_updated") {
+            loadDataRef.current({ silent: true });
+          }
+        } catch (err) {
+          console.error("WebSocket message error:", err);
+        }
+      };
+
+      ws.onclose = () => {
+        if (!isActive) return;
+        console.log("WebSocket disconnected");
+        // Reconnect after 5 seconds
+        reconnectTimeoutId = setTimeout(() => {
+          if (isActive && liveEnabled) {
+            connect();
+          }
+        }, 5000);
+      };
+      
+      ws.onerror = (error) => {
+        if (!isActive) return; // Ignore errors caused by intentional cleanup
+        console.error("WebSocket error:", error);
+        ws?.close();
+      };
     };
 
-    tick();
-    const id = setInterval(tick, REFRESH_INTERVAL_MS);
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [liveEnabled, filters.minFRP]);
+    connect();
+
+    return () => {
+      isActive = false;
+      clearTimeout(reconnectTimeoutId);
+      if (ws) {
+        // Remove all handlers to prevent race conditions during unmount
+        ws.onopen = null;
+        ws.onmessage = null;
+        ws.onerror = null;
+        ws.onclose = null;
+        ws.close();
+      }
+    };
+  }, [liveEnabled]);
 
   // Client-side filtering
   const filteredEvents = useMemo(() => {
@@ -281,14 +322,13 @@ export default function DashboardPage() {
                   {liveEnabled ? "Live" : "Paused"}
                 </span>
                 <span className="whitespace-nowrap text-[11px] text-muted-foreground">
-                  {isAutoSyncing ? "Syncing…" : formatUpdated(lastUpdated)}
+                  {formatUpdated(lastUpdated)}
                 </span>
-                {isAutoSyncing && <Loader2 className="size-3.5 animate-spin text-muted-foreground" aria-hidden="true" />}
               </div>
 
               <div
                 className="flex h-11 items-center gap-2 rounded-xl border border-border bg-white px-3 mira-shadow"
-                title="Auto-refresh detections every 30 seconds"
+                title="Live updates via WebSocket"
               >
                 <span className="whitespace-nowrap text-[11px] text-muted-foreground">Auto</span>
                 <Switch
