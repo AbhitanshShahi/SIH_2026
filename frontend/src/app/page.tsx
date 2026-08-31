@@ -123,7 +123,7 @@ export default function DashboardPage() {
 
       ws.onopen = () => {
         if (!isActive) return;
-        console.log("WebSocket connected to", wsUrl);
+        console.log("WebSocket connected");
       };
 
       ws.onmessage = (event) => {

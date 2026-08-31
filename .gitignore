@@ -60,3 +60,5 @@ backend/.env.*
 eda/
 data/raw/
 processed/
+alembic/
+alembic.ini
