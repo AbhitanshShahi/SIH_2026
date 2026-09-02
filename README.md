@@ -424,17 +424,6 @@ The project demonstrates an end-to-end engineering pipeline:
 
 ---
 
-## 👥 Contributors
-
-Add the project contributors here.
-
-```text
-Your Team Name
-Smart India Hackathon 2026
-```
-
----
-
 ## 📜 License
 
 Add the appropriate license for the project before making the repository public.
